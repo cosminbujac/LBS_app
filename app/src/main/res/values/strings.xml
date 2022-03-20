@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">""</string>
     <string name="hello">Hello</string>
+    <string name="logout">Logout</string>
+    <string name="profile">Profile</string>
+    <string name="open">open</string>
+    <string name="close">close</string>
 </resources>
