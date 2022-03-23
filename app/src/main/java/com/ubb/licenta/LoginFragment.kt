@@ -43,7 +43,7 @@ class LoginFragment : Fragment() {
         viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
             when (authenticationState) {
                 LoginViewModel.AuthenticationState.AUTHENTICATED -> {
-                    val action = LoginFragmentDirections.actionLoginFragmentToMainFragment()
+                    val action = LoginFragmentDirections.actionLoginFragmentToPermissionFragment()
                     navController.navigate(action)
                 }
                 else -> {
@@ -85,16 +85,16 @@ class LoginFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == MainFragment.SIGN_IN_RESULT_CODE) {
+        if (requestCode == PermissionFragment.SIGN_IN_RESULT_CODE) {
             val response = IdpResponse.fromResultIntent(data)
             if (resultCode == Activity.RESULT_OK) {
                 // User successfully signed in.
-                Log.i(MainFragment.TAG, "Successfully signed in user ${FirebaseAuth.getInstance().currentUser?.displayName}!")
+                Log.i(PermissionFragment.TAG, "Successfully signed in user ${FirebaseAuth.getInstance().currentUser?.displayName}!")
             } else {
                 // Sign in failed. If response is null, the user canceled the
                 // sign-in flow using the back button. Otherwise, check
                 // the error code and handle the error.
-                Log.i(MainFragment.TAG, "Sign in unsuccessful ${response?.error?.errorCode}")
+                Log.i(PermissionFragment.TAG, "Sign in unsuccessful ${response?.error?.errorCode}")
             }
         }
     }
