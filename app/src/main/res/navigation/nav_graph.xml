@@ -16,6 +16,11 @@
             app:popExitAnim="@anim/fui_slide_out_left"
             app:popUpTo="@id/permissionFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_permissionFragment_to_mapsFragment"
+            app:destination="@id/mapsFragment"
+            app:popUpTo="@id/permissionFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/loginFragment"

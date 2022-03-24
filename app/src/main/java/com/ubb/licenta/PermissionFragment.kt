@@ -16,15 +16,20 @@ import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.navigation.NavigationView
 import com.ubb.licenta.databinding.FragmentPermissionBinding
+import com.ubb.licenta.Permissions.hasLocationPermission
+import com.ubb.licenta.Permissions.requestLocationPermission
+import com.vmadalin.easypermissions.EasyPermissions
+import com.vmadalin.easypermissions.dialogs.SettingsDialog
 
-class PermissionFragment : Fragment() {
+class PermissionFragment : Fragment(),EasyPermissions.PermissionCallbacks {
 
     companion object {
         const val TAG = "MainFragment"
         const val SIGN_IN_RESULT_CODE = 1001
     }
 
-    private var binding: FragmentPermissionBinding? = null
+    private var _binding: FragmentPermissionBinding? = null
+    private val binding get()  = _binding!!
     lateinit var toggle : ActionBarDrawerToggle
     lateinit var drawerLayout : DrawerLayout
     lateinit var navView : NavigationView
@@ -38,17 +43,31 @@ class PermissionFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_permission, container, false)
-        return binding!!.root
+
+        _binding = DataBindingUtil.inflate(inflater, R.layout.fragment_permission, container, false)
+        navController = findNavController()
+        if (hasLocationPermission(requireContext())){
+            val action = R.id.action_permissionFragment_to_mapsFragment
+            navController.navigate(action)
+        }
+        binding.continueButton.setOnClickListener {
+            if (hasLocationPermission(requireContext())){
+                val action = R.id.action_permissionFragment_to_mapsFragment
+                navController.navigate(action)
+            }
+            else{
+                requestLocationPermission(this)
+            }
+        }
+
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        navController = findNavController()
 
         viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
             if (authenticationState.equals(LoginViewModel.AuthenticationState.UNAUTHENTICATED)) {
-
                     val action = PermissionFragmentDirections.actionPermissionFragmentToLoginFragment()
                     navController.navigate(action)
 
@@ -75,8 +94,32 @@ class PermissionFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
     }
 
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode,permissions,grantResults,this)
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: List<String>) {
+        if(EasyPermissions.somePermissionPermanentlyDenied(this,perms[0])){
+            SettingsDialog.Builder(requireActivity()).build().show()
+        }
+        else{
+            requestLocationPermission(this)
+        }
+    }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: List<String>) {
+        navController.navigate((R.id.action_permissionFragment_to_mapsFragment))
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
 }
