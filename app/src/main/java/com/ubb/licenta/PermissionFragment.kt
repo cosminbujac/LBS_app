@@ -63,37 +63,6 @@ class PermissionFragment : Fragment(),EasyPermissions.PermissionCallbacks {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
-            if (authenticationState.equals(LoginViewModel.AuthenticationState.UNAUTHENTICATED)) {
-                    val action = PermissionFragmentDirections.actionPermissionFragmentToLoginFragment()
-                    navController.navigate(action)
-
-            }
-        })
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        drawerLayout = activity!!.findViewById(R.id.drawerLayout)
-        navView = activity!!.findViewById(R.id.nav_view)
-        toggle = ActionBarDrawerToggle(activity,drawerLayout,R.string.open,R.string.close)
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-        navView.setNavigationItemSelectedListener {
-            when(it.itemId){
-                R.id.logoutItem ->{
-                    Toast.makeText(activity,"LoggedOut!",Toast.LENGTH_SHORT).show()
-                    AuthUI.getInstance().signOut(context!!)
-                }
-            }
-            true
-        }
-
-        super.onActivityCreated(savedInstanceState)
-    }
-
 
 
     override fun onRequestPermissionsResult(

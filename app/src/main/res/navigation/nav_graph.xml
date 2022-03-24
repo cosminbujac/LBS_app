@@ -3,12 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/loginFragment"
+    >
 
     <fragment
         android:id="@+id/permissionFragment"
         android:name="com.ubb.licenta.PermissionFragment"
-        android:label="PermissionFragment">
+        android:label="PermissionFragment"
+
+        >
         <action
             android:id="@+id/action_permissionFragment_to_loginFragment"
             app:destination="@id/loginFragment"
@@ -38,5 +41,11 @@
         android:id="@+id/mapsFragment"
         android:name="com.ubb.licenta.MapsFragment"
         android:label="fragment_maps"
-        tools:layout="@layout/fragment_maps" />
+        tools:layout="@layout/fragment_maps" >
+        <action
+            android:id="@+id/action_mapsFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/mapsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 </navigation>

@@ -24,6 +24,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val drawerLayout : DrawerLayout = findViewById(R.id.drawerLayout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+        val navController = findNavController(R.id.nav_host_fragment)
+        navView.menu.findItem(R.id.logoutItem).setOnMenuItemClickListener {
+            drawerLayout.closeDrawers()
+            val awaitLogout= AuthUI.getInstance().signOut(this)
+            awaitLogout.addOnCompleteListener{
+                Toast.makeText(this,"LoggedOut!",Toast.LENGTH_SHORT).show()
+                navController.navigate(R.id.loginFragment)
+            }
+            true
+        }
+
         toggle = ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close)
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
