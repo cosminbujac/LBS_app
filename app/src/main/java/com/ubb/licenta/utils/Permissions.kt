@@ -1,9 +1,9 @@
-package com.ubb.licenta
+package com.ubb.licenta.utils
 
 import android.Manifest
 import android.content.Context
 import androidx.fragment.app.Fragment
-import com.ubb.licenta.Constants.PERMISSION_LOCATION_REQUEST_CODE
+import com.ubb.licenta.utils.Constants.PERMISSION_LOCATION_REQUEST_CODE
 import com.vmadalin.easypermissions.EasyPermissions
 
 object Permissions {

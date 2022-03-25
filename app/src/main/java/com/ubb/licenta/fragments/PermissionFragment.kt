@@ -1,23 +1,22 @@
-package com.ubb.licenta
+package com.ubb.licenta.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
-import com.firebase.ui.auth.AuthUI
 import com.google.android.material.navigation.NavigationView
+import com.ubb.licenta.R
 import com.ubb.licenta.databinding.FragmentPermissionBinding
-import com.ubb.licenta.Permissions.hasLocationPermission
-import com.ubb.licenta.Permissions.requestLocationPermission
+import com.ubb.licenta.utils.Permissions.hasLocationPermission
+import com.ubb.licenta.utils.Permissions.requestLocationPermission
+import com.ubb.licenta.viewmodels.LoginViewModel
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
 

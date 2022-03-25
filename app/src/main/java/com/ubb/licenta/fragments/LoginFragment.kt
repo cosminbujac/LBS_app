@@ -1,4 +1,4 @@
-package com.ubb.licenta
+package com.ubb.licenta.fragments
 
 import android.app.Activity
 import android.content.Intent
@@ -15,6 +15,8 @@ import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.ubb.licenta.R
+import com.ubb.licenta.viewmodels.LoginViewModel
 
 class LoginFragment : Fragment() {
 
@@ -43,7 +45,8 @@ class LoginFragment : Fragment() {
         viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
             when (authenticationState) {
                 LoginViewModel.AuthenticationState.AUTHENTICATED -> {
-                    val action = LoginFragmentDirections.actionLoginFragmentToPermissionFragment()
+                    val action =
+                        LoginFragmentDirections.actionLoginFragmentToPermissionFragment()
                     navController.navigate(action)
                 }
                 else -> {

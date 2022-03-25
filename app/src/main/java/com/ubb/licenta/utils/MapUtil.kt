@@ -1,4 +1,4 @@
-package com.ubb.licenta
+package com.ubb.licenta.utils
 
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng

@@ -5,7 +5,13 @@
     <string name="profile">Profile</string>
     <string name="open">open</string>
     <string name="close">close</string>
+    <string name="dropped_pin">Pin</string>
     <string name="continue_to_app">Continue</string>
     <string name="request_message">Welcome to the app! In order to use the application in the way it is intended to work, we need to request location permission for you. If you agree and wish to continue, tap on the button below.</string>
     <string name="permission_required">Permission Required</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="save_marker">Save Marker</string>
+    <string name="add_marker">Add Marker</string>
+
 </resources>

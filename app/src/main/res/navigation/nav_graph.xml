@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/permissionFragment"
-        android:name="com.ubb.licenta.PermissionFragment"
+        android:name="com.ubb.licenta.fragments.PermissionFragment"
         android:label="PermissionFragment"
 
         >
@@ -27,7 +27,7 @@
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.ubb.licenta.LoginFragment"
+        android:name="com.ubb.licenta.fragments.LoginFragment"
         android:label="LoginFragment" >
         <action
             android:id="@+id/action_loginFragment_to_permissionFragment"
@@ -39,7 +39,7 @@
     </fragment>
     <fragment
         android:id="@+id/mapsFragment"
-        android:name="com.ubb.licenta.MapsFragment"
+        android:name="com.ubb.licenta.fragments.MapsFragment"
         android:label="fragment_maps"
         tools:layout="@layout/fragment_maps" >
         <action
@@ -47,5 +47,37 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/mapsFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_mapsFragment_to_newMarkerFragment"
+            app:destination="@id/newMarkerFragment" >
+            <argument
+                android:name="LatLng"
+                app:argType="com.google.android.gms.maps.model.LatLng"
+                />
+        </action>
+        <argument
+            android:name="MarkerOptions"
+            app:argType="com.google.android.gms.maps.model.MarkerOptions"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <fragment
+        android:id="@+id/newMarkerFragment"
+        android:name="com.ubb.licenta.fragments.NewMarkerFragment"
+        android:label="NewMarkerFragment" >
+        <action
+            android:id="@+id/action_newMarkerFragment_to_mapsFragment"
+            app:destination="@id/mapsFragment"
+            app:popUpTo="@id/newMarkerFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="MarkerOptions"
+                app:argType="com.google.android.gms.maps.model.MarkerOptions"
+                app:nullable="true" />
+
+        </action>
+        <argument
+            android:name="LatLng"
+            app:argType="com.google.android.gms.maps.model.LatLng" />
     </fragment>
 </navigation>

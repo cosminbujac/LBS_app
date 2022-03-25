@@ -1,4 +1,4 @@
-package com.ubb.licenta
+package com.ubb.licenta.utils
 
 object Constants {
     const val PERMISSION_LOCATION_REQUEST_CODE = 1

@@ -1,4 +1,4 @@
-package com.ubb.licenta
+package com.ubb.licenta.livedata
 
 import androidx.lifecycle.LiveData
 import com.google.firebase.auth.FirebaseAuth

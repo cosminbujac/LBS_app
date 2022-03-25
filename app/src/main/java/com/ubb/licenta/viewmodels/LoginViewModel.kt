@@ -1,10 +1,8 @@
-package com.ubb.licenta
+package com.ubb.licenta.viewmodels
 
-import android.content.Context
-import android.preference.PreferenceManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
-import kotlin.random.Random
+import com.ubb.licenta.livedata.FirebaseUserLiveData
 
 class LoginViewModel : ViewModel() {
 
