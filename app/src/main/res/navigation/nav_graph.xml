@@ -60,6 +60,11 @@
             app:argType="com.google.android.gms.maps.model.MarkerOptions"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="MarkerImageUri"
+            app:argType="android.net.Uri"
+            app:nullable="true"
+            android:defaultValue="@null"/>
     </fragment>
     <fragment
         android:id="@+id/newMarkerFragment"
@@ -74,6 +79,10 @@
                 android:name="MarkerOptions"
                 app:argType="com.google.android.gms.maps.model.MarkerOptions"
                 app:nullable="true" />
+            <argument
+                android:name="MarkerImageUri"
+                app:argType="android.net.Uri"
+                app:nullable="true"/>
 
         </action>
         <argument

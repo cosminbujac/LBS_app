@@ -1,6 +1,7 @@
 package com.ubb.licenta.fragments
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.fragment.app.Fragment
 
 import android.os.Bundle
@@ -27,6 +28,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private lateinit var fusedLocationProviderClinet : FusedLocationProviderClient
 
     private var newMarkerOptions : MarkerOptions? = null
+    private var newMarkerImageURI : Uri? = null
 
     private var _binding : FragmentMapsBinding? = null
     private val binding get() =_binding!!
@@ -46,6 +48,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         newMarkerOptions = MapsFragmentArgs.fromBundle(arguments!!).markerOptions
+        newMarkerImageURI = MapsFragmentArgs.fromBundle(arguments!!).markerImageUri
 
         mapFragment?.getMapAsync(this)
     }
@@ -53,8 +56,11 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     @SuppressLint("MissingPermission", "PotentialBehaviorOverride")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        if(newMarkerOptions!=null)
-            map.addMarker(newMarkerOptions!!)
+        if(newMarkerOptions!=null && newMarkerImageURI!=null){
+            val marker = map.addMarker(newMarkerOptions!!)
+            marker!!.tag = newMarkerImageURI.toString()
+        }
+
         map.isMyLocationEnabled = true
         val myLocation = fusedLocationProviderClinet.lastLocation
         myLocation.addOnCompleteListener{

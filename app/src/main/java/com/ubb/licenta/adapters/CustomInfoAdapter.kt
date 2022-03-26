@@ -2,7 +2,9 @@ package com.ubb.licenta.adapters
 
 import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
@@ -34,6 +36,9 @@ class CustomInfoAdapter(context: Context):GoogleMap.InfoWindowAdapter {
 
         val descriptionTextView = contentView.findViewById<TextView>(R.id.description_textView)
         descriptionTextView.text = description
+
+        val markerImageView = contentView.findViewById<ImageView>(R.id.marker_imageView)
+        markerImageView.setImageURI(Uri.parse(marker!!.tag.toString()))
 
         //change image view as well
 
