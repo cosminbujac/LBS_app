@@ -80,6 +80,9 @@ dependencies {
     // Easy Permissions
     implementation 'com.vmadalin:easypermissions-ktx:0.1.0'
 
+    //Draw Route
+    implementation 'com.github.malikdawar:drawroute:1.5'
+
 
 }
 

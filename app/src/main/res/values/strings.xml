@@ -15,5 +15,7 @@
     <string name="add_marker">Add Marker</string>
     <string name="take_a_photo">Take a Photo</string>
     <string name="select_from_files">Select A Photo From Files</string>
+    <string name="google_map_api_key">AIzaSyAhDM2v1KS_rdypxLGmw_QC4X69ubc7Rlk</string>
+    <string name="get_directions">Get directions!</string>
 
 </resources>
