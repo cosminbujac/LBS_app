@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
     id("androidx.navigation.safeargs")
+    id 'dagger.hilt.android.plugin'
 
 }
 
@@ -82,6 +83,10 @@ dependencies {
 
     //Draw Route
     implementation 'com.github.malikdawar:drawroute:1.5'
+
+    //Dagger - Hilt
+    implementation 'com.google.dagger:hilt-android:2.41'
+    kapt 'com.google.dagger:hilt-compiler:2.41'
 
 
 }

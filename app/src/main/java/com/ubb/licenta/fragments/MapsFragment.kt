@@ -1,36 +1,43 @@
 package com.ubb.licenta.fragments
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Color
 import android.location.Location
 import android.net.Uri
 import androidx.fragment.app.Fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.*
 
 
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.maps.route.extensions.drawRouteOnMap
 import com.maps.route.extensions.moveCameraOnMap
 import com.maps.route.model.TravelMode
 import com.ubb.licenta.adapters.CustomInfoAdapter
 import com.ubb.licenta.R
 import com.ubb.licenta.databinding.FragmentMapsBinding
+import com.ubb.licenta.service.TrackerService
+import com.ubb.licenta.utils.Constants.ACTION_SERVICE_START
+import com.ubb.licenta.utils.Constants.ACTION_SERVICE_STOP
 import com.ubb.licenta.utils.MapUtil.setCameraPosition
 import com.ubb.licenta.viewmodels.MapsViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 class MapsFragment : Fragment(),OnMapReadyCallback {
 
@@ -41,11 +48,15 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private var _binding : FragmentMapsBinding? = null
     private val binding get() =_binding!!
 
+    val startedTracking = MutableLiveData<Boolean>(false)
     private var myLocation: Location? = null
 
     private val viewModel by viewModels<MapsViewModel>()
 
     private var newMarker : Marker? = null;
+
+    private var trackingLocationList = mutableListOf<LatLng>()
+    private var trackedPolylineList  = mutableListOf<Polyline>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,6 +65,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     ): View? {
         viewModel.init(requireContext())
         _binding = FragmentMapsBinding.inflate(inflater, container, false)
+        binding.lifecycleOwner = this
+        binding.tracking = this
 
 
 
@@ -78,14 +91,11 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         map = googleMap
         map.setInfoWindowAdapter(CustomInfoAdapter(context!!))
 
-
         if(newMarkerOptions!=null && newMarkerImageURI!=null){
             val marker = map.addMarker(newMarkerOptions!!)
             marker!!.tag = newMarkerImageURI.toString()
         }
         map.isMyLocationEnabled = true
-
-
 
         viewModel.myLocation.observe(this, androidx.lifecycle.Observer {
             myLocation = viewModel.myLocation.value
@@ -113,16 +123,68 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
         setMapLongClick(map)
         setOnMapClick(map)
-
-
-
-        val source = LatLng(46.75781414932984, 23.546505045000536) //starting point (LatLng)
-        val destination = LatLng(46.7684769320145, 23.556227256324327) // ending point (LatLng)
-
         setOnMarkerClick(map)
- //       drawRouteToLocation(source,destination)
+        setTracker(map)
+
+        observerTrackerService()
+    }
+
+    private fun observerTrackerService(){
+        TrackerService.locationList.observe(viewLifecycleOwner) {
+            if (it != null) {
+                trackingLocationList = it
+                drawTrackedRoute()
+            }
+        }
+        TrackerService.started.observe(viewLifecycleOwner){
+            startedTracking.value = it
+        }
+    }
+
+    private fun drawTrackedRoute(){
+        val polyline = map.addPolyline(
+            PolylineOptions().apply {
+                width(10f)
+                color(Color.BLUE)
+                jointType(JointType.ROUND)
+                startCap(ButtCap())
+                endCap(ButtCap())
+                addAll(trackingLocationList)
+            }
+        )
+
+        trackedPolylineList.add(polyline)
+    }
 
 
+
+    private fun setTracker(map: GoogleMap) {
+        binding.startTrackButton.setOnClickListener{
+            sendActionCommandService(ACTION_SERVICE_START)
+            disableButton(binding.startTrackButton)
+            enableButton(binding.stopTrackButton)
+        }
+        binding.stopTrackButton.setOnClickListener{
+            sendActionCommandService(ACTION_SERVICE_STOP)
+            showBiggerPicture()
+            disableButton(binding.stopTrackButton)
+            enableButton(binding.startTrackButton)
+        }
+    }
+
+    private fun showBiggerPicture() {
+        val bounds = LatLngBounds.Builder()
+        for(location in trackingLocationList){
+            bounds.include(location)
+        }
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                bounds.build(),
+                100
+            ),
+            2000,
+            null
+        )
     }
 
     private fun drawRouteToLocation(source:LatLng, destination:LatLng){
@@ -224,6 +286,14 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         }
     }
 
+    private fun sendActionCommandService(action:String){
+        Intent(requireContext(),
+            TrackerService::class.java
+        ).apply {
+            this.action = action
+            requireContext().startService(this)
+        }
+    }
 
     override fun onDestroyView() {
         _binding = null

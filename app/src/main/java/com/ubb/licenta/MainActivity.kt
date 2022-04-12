@@ -13,7 +13,7 @@ import com.firebase.ui.auth.AuthUI
 import com.google.android.material.navigation.NavigationView
 import android.content.DialogInterface
 import androidx.fragment.app.FragmentManager
-
+import dagger.hilt.android.AndroidEntryPoint
 
 class MainActivity : AppCompatActivity() {
 
