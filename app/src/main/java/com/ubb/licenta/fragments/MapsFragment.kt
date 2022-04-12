@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.fragment.findNavController
@@ -29,6 +30,7 @@ import com.ubb.licenta.viewmodels.MapsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MapsFragment : Fragment(),OnMapReadyCallback {
 
@@ -43,6 +45,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     private val viewModel by viewModels<MapsViewModel>()
 
+    private var newMarker : Marker? = null;
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -50,6 +54,9 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     ): View? {
         viewModel.init(requireContext())
         _binding = FragmentMapsBinding.inflate(inflater, container, false)
+
+
+
         return binding.root
     }
 
@@ -59,21 +66,33 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         newMarkerOptions = MapsFragmentArgs.fromBundle(arguments!!).markerOptions
         newMarkerImageURI = MapsFragmentArgs.fromBundle(arguments!!).markerImageUri
 
+        viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
+            addMarkerOnMap(it)
+        })
+
         mapFragment?.getMapAsync(this)
     }
 
     @SuppressLint("MissingPermission", "PotentialBehaviorOverride")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        map.setInfoWindowAdapter(CustomInfoAdapter(context!!))
+
+
         if(newMarkerOptions!=null && newMarkerImageURI!=null){
             val marker = map.addMarker(newMarkerOptions!!)
             marker!!.tag = newMarkerImageURI.toString()
         }
         map.isMyLocationEnabled = true
 
+
+
         viewModel.myLocation.observe(this, androidx.lifecycle.Observer {
             myLocation = viewModel.myLocation.value
         })
+
+        viewModel.provideCloseMarkers()
+
         lifecycle.coroutineScope.launch {
             delay(1000)
             if(myLocation!=null){
@@ -85,6 +104,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             }
         }
 
+
         map.uiSettings.apply {
             isZoomControlsEnabled = true
             isRotateGesturesEnabled = false
@@ -92,14 +112,15 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         }
 
         setMapLongClick(map)
-        map.setInfoWindowAdapter(CustomInfoAdapter(context!!))
+        setOnMapClick(map)
+
 
 
         val source = LatLng(46.75781414932984, 23.546505045000536) //starting point (LatLng)
         val destination = LatLng(46.7684769320145, 23.556227256324327) // ending point (LatLng)
 
         setOnMarkerClick(map)
-   //     drawRouteToLocation(source,destination)
+ //       drawRouteToLocation(source,destination)
 
 
     }
@@ -114,14 +135,16 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 source = source, // Source from where you want to draw path
                 destination = destination, // destination to where you want to draw path
                 context = context!!, //Activity context
-                travelMode = TravelMode.WALKING
+                travelMode = TravelMode.DRIVING
             )
         }
     }
 
 
     private fun setMapLongClick(map: GoogleMap) {
+
         map.setOnMapLongClickListener { latLng ->
+            newMarker?.remove()
             // A snippet is additional text that's displayed after the title.
             val snippet = String.format(
                 Locale.getDefault(),
@@ -129,23 +152,32 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 latLng.latitude,
                 latLng.longitude
             )
-            val marker = map.addMarker(
+            newMarker = map.addMarker(
                 MarkerOptions()
                     .position(latLng)
                     .title("Add New Marker")
                     .snippet(snippet)
             )
-            binding.addMarkerButton.apply {
-                visibility = View.VISIBLE
-                isEnabled = true
-            }
+            disableButton(binding.goToButton)
+            enableButton(binding.addMarkerButton)
+            binding.goToButton
             binding.addMarkerButton.setOnClickListener{
-                val action = MapsFragmentDirections.actionMapsFragmentToNewMarkerFragment(marker!!.position)
+                val action = MapsFragmentDirections.actionMapsFragmentToNewMarkerFragment(newMarker!!.position)
                 findNavController().navigate(action)
-                it.visibility = View.INVISIBLE
-                it.isEnabled = false
+                disableButton(binding.addMarkerButton)
             }
         }
+    }
+
+    private fun setOnMapClick(map:GoogleMap){
+
+        map.setOnMapClickListener {
+            newMarker?.remove()
+            newMarker = null
+            disableButton(binding.addMarkerButton)
+            disableButton(binding.goToButton)
+        }
+
     }
 
     @SuppressLint("PotentialBehaviorOverride")
@@ -153,20 +185,15 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         map.setOnMarkerClickListener {
             val marker: Marker = it
             if(!it.title.equals("Add New Marker")){
-                binding.goToButton.apply {
-                    visibility = View.VISIBLE
-                    isEnabled = true
-                }
+                disableButton(binding.addMarkerButton)
+                enableButton(binding.goToButton)
                 binding.goToButton.setOnClickListener{
                     lifecycle.coroutineScope.launch {
                         val destination = marker.position
                         viewModel.updateMyLocation()
                         delay(500)
                         val origin = LatLng(myLocation!!.latitude,myLocation!!.longitude)
-                        binding.goToButton.apply {
-                            visibility = View.INVISIBLE
-                            isEnabled = false
-                        }
+                        disableButton(binding.goToButton)
                         drawRouteToLocation(origin,destination)
                     }
 
@@ -177,9 +204,28 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         }
     }
 
+    private fun addMarkerOnMap(options: MarkerOptions){
+        if (this::map.isInitialized){
+            map.addMarker(options)
+        }
+    }
+
+    private fun disableButton(button:Button){
+        button.apply{
+            visibility = View.INVISIBLE
+            isEnabled = false
+        }
+    }
+
+    private fun enableButton(button:Button){
+        button.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
+    }
+
 
     override fun onDestroyView() {
-
         _binding = null
         super.onDestroyView()
     }
