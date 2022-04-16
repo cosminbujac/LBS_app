@@ -16,9 +16,11 @@ import android.widget.Button
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
+import com.google.firebase.auth.FirebaseAuth
 
 
 import com.maps.route.extensions.drawRouteOnMap
@@ -27,16 +29,15 @@ import com.maps.route.model.TravelMode
 import com.ubb.licenta.adapters.CustomInfoAdapter
 import com.ubb.licenta.R
 import com.ubb.licenta.databinding.FragmentMapsBinding
+import com.ubb.licenta.repository.FirebaseRepository
 import com.ubb.licenta.service.TrackerService
 import com.ubb.licenta.utils.Constants.ACTION_SERVICE_START
 import com.ubb.licenta.utils.Constants.ACTION_SERVICE_STOP
 import com.ubb.licenta.utils.MapUtil.setCameraPosition
 import com.ubb.licenta.viewmodels.MapsViewModel
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 class MapsFragment : Fragment(),OnMapReadyCallback {
@@ -78,10 +79,26 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         newMarkerOptions = MapsFragmentArgs.fromBundle(arguments!!).markerOptions
         newMarkerImageURI = MapsFragmentArgs.fromBundle(arguments!!).markerImageUri
+        Log.i("URI",newMarkerImageURI.toString())
 
         viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
             addMarkerOnMap(it)
         })
+
+        val firebaseRepo = FirebaseRepository()
+
+        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.storeMarker(it,
+            MarkerOptions()
+                .position(LatLng(46.758214146338529, 23.54403594482924))
+                .title("titleTest3 ")
+                .snippet("DescriptionTest3"),
+            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADCIM%2FCamera%2FIMG_20220326_111041.jpg")
+            ) }
+
+        lifecycleScope.launch{
+            firebaseRepo.getMarkersTest()
+        }
+        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.getUserMarkers(it) }
 
         mapFragment?.getMapAsync(this)
     }
