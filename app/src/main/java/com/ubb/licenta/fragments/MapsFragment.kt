@@ -59,6 +59,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private var trackingLocationList = mutableListOf<LatLng>()
     private var trackedPolylineList  = mutableListOf<Polyline>()
 
+    private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -82,18 +84,21 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         Log.i("URI",newMarkerImageURI.toString())
 
         viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
-            addMarkerOnMap(it)
+            if (this::map.isInitialized){
+                val marker = map.addMarker(it.first)
+                marker?.tag = it.second.toString()
+            }
         })
 
         val firebaseRepo = FirebaseRepository()
 
-        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.storeMarker(it,
-            MarkerOptions()
-                .position(LatLng(46.758214146338529, 23.54403594482924))
-                .title("titleTest3 ")
-                .snippet("DescriptionTest3"),
-            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADCIM%2FCamera%2FIMG_20220326_111041.jpg")
-            ) }
+//        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.storeMarker(it,
+//            MarkerOptions()
+//                .position(LatLng(46.758214146338529, 23.54403594482924))
+//                .title("titleTest3 ")
+//                .snippet("DescriptionTest3"),
+//            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADCIM%2FCamera%2FIMG_20220326_111041.jpg")
+//            ) }
 
         lifecycleScope.launch{
             firebaseRepo.getMarkersTest()
@@ -111,6 +116,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         if(newMarkerOptions!=null && newMarkerImageURI!=null){
             val marker = map.addMarker(newMarkerOptions!!)
             marker!!.tag = newMarkerImageURI.toString()
+            viewModel.saveMarker(currentUser!!,newMarkerOptions!!,newMarkerImageURI!!)
         }
         map.isMyLocationEnabled = true
 
@@ -118,7 +124,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             myLocation = viewModel.myLocation.value
         })
 
-        viewModel.provideCloseMarkers()
+
 
         lifecycle.coroutineScope.launch {
             delay(1000)

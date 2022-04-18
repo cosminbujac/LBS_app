@@ -22,14 +22,15 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 class FirebaseRepository:IRepository {
 
     override val database: FirebaseDatabase
         get() = super.database
 
-    private var _downloadUrl = MutableLiveData<Uri?>()
-    val downloadUrl get() = _downloadUrl
+    var nearbyMarkers: Flow<Map<String, LocationData<FirebaseMarker?>>>? = null
+
 
     override suspend fun getMarkersTest() {
         val geoFire = GeoFire(database.getReference("Locations"))
@@ -50,21 +51,16 @@ class FirebaseRepository:IRepository {
 
     suspend fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
         val geoFire = GeoFire(database.getReference("Locations"))
-        val query = geoFire.queryAtLocation(GeoLocation(46.758214146338597, 23.54403594482969),10.0)
-        val nearbyMarkers: Flow<Map<String, LocationData<FirebaseMarker?>>> =
+        val query = geoFire.queryAtLocation(GeoLocation(currentLocation.latitude,currentLocation.longitude),distance)
+        nearbyMarkers =
             query
                 .asTypedFlow<FirebaseMarker>(database.getReference("Markers"))
                 .flowOn(Dispatchers.IO)
-                .onEach { map ->
-                    map.onEach {
-                        val key = it.key
-                        val (geoLocation, dataSnapshot) = it.value
-                        val marker = it.value
-                        //add clinet-side filter to only get different markers
-                        Log.i("LOCATION",it.toString())
-                    }
-                }
-        nearbyMarkers.collect()
+//        nearbyMarkers!!.collect {
+//            Log.i("Flow","Flow done ${closeMarkers.size}")
+//        }
+//        Log.i("closeMarkers",closeMarkers.size.toString())
+//        return closeMarkers
     }
 
     override fun getUserMarkers(userID: String) {
@@ -91,10 +87,10 @@ class FirebaseRepository:IRepository {
         storageReference.putFile(imageUri).
         addOnSuccessListener {
             storageReference.downloadUrl.addOnSuccessListener{
-               uploadMarker(userID, markerOptions,imageUri)
+               uploadMarker(userID, markerOptions,it)
             }
         }.addOnFailureListener{
-            _downloadUrl.postValue(null)
+            throw Exception("")
         }
 
 
@@ -106,9 +102,9 @@ class FirebaseRepository:IRepository {
         firebaseMarker.imageUrl = imageUri.toString()
         val newReference = database.getReference("Markers").push()
         newReference.setValue(firebaseMarker).addOnSuccessListener {
-            println("Success!")
+            Log.i("UploadMarker","Success!")
         }.addOnFailureListener{
-            println("Failure!")
+            Log.e("UploadMarker","Failure caused by: $it")
         }
         val geoFire = GeoFire(database.getReference("Locations"))
         geoFire.setLocation(newReference.key, GeoLocation(markerOptions.position.latitude,markerOptions.position.longitude))

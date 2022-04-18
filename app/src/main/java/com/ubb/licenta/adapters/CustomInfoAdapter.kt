@@ -2,13 +2,26 @@ package com.ubb.licenta.adapters
 
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
+import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.Glide.with
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
+import com.ubb.licenta.GlideApp
+import com.ubb.licenta.GlideApp.with
+import com.ubb.licenta.GlideApplication
 import com.ubb.licenta.R
+import java.util.logging.Handler
 
 class CustomInfoAdapter(context: Context):GoogleMap.InfoWindowAdapter {
 
@@ -38,9 +51,56 @@ class CustomInfoAdapter(context: Context):GoogleMap.InfoWindowAdapter {
         descriptionTextView.text = description
 
         val markerImageView = contentView.findViewById<ImageView>(R.id.marker_imageView)
-        markerImageView.setImageURI(Uri.parse(marker!!.tag.toString()))
+        GlideApp
+            .with(contentView)
+            .load(marker!!.tag)
+            .listener(MarkerCallback(marker))
+            .into(markerImageView)
 
-        //change image view as well
+    }
 
+    class MarkerCallback internal constructor(marker: Marker?) :
+
+        RequestListener<Drawable> {
+        var done = false;
+        val handler = android.os.Handler()
+        var marker: Marker? = null
+        private fun onSuccess() {
+            if (marker != null && marker!!.isInfoWindowShown) {
+                marker!!.hideInfoWindow()
+                marker!!.showInfoWindow()
+            }
+        }
+
+        init {
+            this.marker = marker
+        }
+
+        override fun onLoadFailed(
+            e: GlideException?,
+            model: Any?,
+            target: Target<Drawable>?,
+            isFirstResource: Boolean
+        ): Boolean {
+            Log.e(javaClass.simpleName, "Error loading thumbnail! -> $e")
+            return false
+        }
+
+        override fun onResourceReady(
+            resource: Drawable?,
+            model: Any?,
+            target: Target<Drawable>?,
+            dataSource: DataSource?,
+            isFirstResource: Boolean
+        ): Boolean {
+            if(!done){
+                handler.post(kotlinx.coroutines.Runnable {
+                    onSuccess()
+                })
+                done =true;
+            }
+
+            return false
+        }
     }
 }

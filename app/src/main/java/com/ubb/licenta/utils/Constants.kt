@@ -1,5 +1,7 @@
 package com.ubb.licenta.utils
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+
 object Constants {
     const val PERMISSION_LOCATION_REQUEST_CODE = 1
     const val IMAGE_REQUEST_CODE =2
@@ -17,4 +19,6 @@ object Constants {
     const val LOCATION_MAX_UPDATE_INTERVAL = 2000L
 
     const val DATABASE_URL ="https://licenta-a92c7-default-rtdb.europe-west1.firebasedatabase.app"
+
+    val SAVED_MARKER_COLOR = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
 }
