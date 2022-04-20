@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.PolyUtil
 import com.ubb.licenta.livedata.FirebaseUserLiveData
 import com.ubb.licenta.model.FirebaseMarker
 import com.ubb.licenta.repository.FirebaseRepository
@@ -32,6 +33,9 @@ class MapsViewModel : ViewModel() {
 
     private val _closeMarkers = MutableLiveData<Pair<MarkerOptions,Uri>>()
     val closeMarkers get() =_closeMarkers
+
+    private val _userPolyline = MutableLiveData<List<LatLng>>()
+    val userPolyline get() =_userPolyline
 
     private val _userMarkers = MutableLiveData<Pair<MarkerOptions,Uri>>()
     val userMarkers get() =_userMarkers
@@ -100,5 +104,19 @@ class MapsViewModel : ViewModel() {
 
     }
 
+    fun savePolyline(coordinateList : List<LatLng>, userID: String){
+        viewModelScope.launch {
+            repository.savePolyline(coordinateList,userID)
+        }
+    }
+
+    fun getUserPolyline(userID: String){
+        viewModelScope.launch {
+            repository.getUserPolyline(userID){
+                val decodedPolyline = PolyUtil.decode(it)
+                _userPolyline.value = decodedPolyline
+            }
+        }
+    }
 
 }

@@ -13,6 +13,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import com.google.maps.android.PolyUtil
 import com.ubb.licenta.model.FirebaseMarker
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +46,7 @@ class FirebaseRepository:IRepository {
 
 
      override fun getUserMarkers(userID: String,viewModelCallBack : (FirebaseMarker?) -> Unit){
-        database.getReference("Markers").orderByChild("userID").equalTo(userID).addValueEventListener(object : ValueEventListener {
+        database.getReference("Markers").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 var marker:FirebaseMarker? = null
                 snapshot.children.forEach {
@@ -84,6 +85,27 @@ class FirebaseRepository:IRepository {
         }
         val geoFire = GeoFire(database.getReference("Locations"))
         geoFire.setLocation(newReference.key, GeoLocation(markerOptions.position.latitude,markerOptions.position.longitude))
+    }
+
+    suspend fun savePolyline(coordinateList:List<LatLng>, userID: String){
+        val dbReference = database.getReference("Polyline").push()
+        val encodedPoly = PolyUtil.encode(coordinateList)
+        dbReference.child("userID").setValue(userID)
+        dbReference.child("polyline").setValue(encodedPoly)
+    }
+
+    fun getUserPolyline(userID: String,viewModelCallBack : (String?) -> Unit){
+        database.getReference("Polyline").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                snapshot.children.forEach {
+                    val encodedPoly = it.child("polyline").getValue(String::class.java)
+                    viewModelCallBack(encodedPoly)
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("PersonalMarkersRepo",error.toString())
+            }
+        })
     }
 
 }

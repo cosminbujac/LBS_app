@@ -21,6 +21,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
+import com.google.maps.android.PolyUtil
 
 
 import com.maps.route.extensions.drawRouteOnMap
@@ -57,7 +58,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private var newMarker : Marker? = null;
 
     private var trackingLocationList = mutableListOf<LatLng>()
-    private var trackedPolylineList  = mutableListOf<Polyline>()
 
     private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -84,20 +84,21 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         Log.i("URI",newMarkerImageURI.toString())
 
         viewModel.providePersonalMarkers(currentUser!!)
-        viewModel.userMarkers.observe(this,androidx.lifecycle.Observer{
-            if (this::map.isInitialized){
-                val marker = map.addMarker(it.first)
-                marker?.tag = it.second.toString()
-            }
-        })
-
-//        viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
+        // get user markers
+//        viewModel.userMarkers.observe(this,androidx.lifecycle.Observer{
 //            if (this::map.isInitialized){
 //                val marker = map.addMarker(it.first)
 //                marker?.tag = it.second.toString()
 //            }
 //        })
 
+        //get close markers
+        viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
+            if (this::map.isInitialized){
+                val marker = map.addMarker(it.first)
+                marker?.tag = it.second.toString()
+            }
+        })
         val firebaseRepo = FirebaseRepository()
 
 //        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.storeMarker(it,
@@ -126,6 +127,22 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
         viewModel.myLocation.observe(this, androidx.lifecycle.Observer {
             myLocation = viewModel.myLocation.value
+        })
+
+        //TODO cut this line of code and implement on user request to appear an overlay
+        //TODO implement marker updates on location change
+        viewModel.getUserPolyline("MfNfrJCReHcQ8CvoIWFftG2uDWH3")
+        viewModel.userPolyline.observe(this,androidx.lifecycle.Observer{
+            map.addPolyline(
+                PolylineOptions().apply {
+                    width(10f)
+                    color(Color.RED)
+                    jointType(JointType.ROUND)
+                    startCap(ButtCap())
+                    endCap(ButtCap())
+                    addAll(it)
+                }
+            )
         })
 
 
@@ -180,7 +197,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             }
         )
 
-        trackedPolylineList.add(polyline)
     }
 
 
@@ -194,9 +210,16 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         binding.stopTrackButton.setOnClickListener{
             sendActionCommandService(ACTION_SERVICE_STOP)
             showBiggerPicture()
+            saveTrackedRoute()
             disableButton(binding.stopTrackButton)
             enableButton(binding.startTrackButton)
         }
+    }
+
+    private fun saveTrackedRoute() {
+        viewModel.savePolyline(trackingLocationList, currentUser!!)
+        trackingLocationList.clear()
+
     }
 
     private fun showBiggerPicture() {
