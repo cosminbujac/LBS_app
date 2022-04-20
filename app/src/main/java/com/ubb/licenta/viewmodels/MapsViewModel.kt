@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.ubb.licenta.livedata.FirebaseUserLiveData
 import com.ubb.licenta.model.FirebaseMarker
 import com.ubb.licenta.repository.FirebaseRepository
+import com.ubb.licenta.repository.IRepository
 import com.ubb.licenta.utils.Constants.SAVED_MARKER_COLOR
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -31,6 +32,9 @@ class MapsViewModel : ViewModel() {
 
     private val _closeMarkers = MutableLiveData<Pair<MarkerOptions,Uri>>()
     val closeMarkers get() =_closeMarkers
+
+    private val _userMarkers = MutableLiveData<Pair<MarkerOptions,Uri>>()
+    val userMarkers get() =_userMarkers
 
     val repository = FirebaseRepository()
 
@@ -67,7 +71,6 @@ class MapsViewModel : ViewModel() {
                 it.forEach { map->
                     val marker = map.value.data
                     _closeMarkers.value = transformMarker(marker)
-
                 }
             }
             Log.i("ViewModel", markers!!.first().toString())
@@ -76,6 +79,14 @@ class MapsViewModel : ViewModel() {
 
     fun saveMarker(currentUser: String, newMarkerOptions: MarkerOptions, newMarkerImageURI: Uri) {
             repository.storeMarker(currentUser,newMarkerOptions,newMarkerImageURI)
+    }
+
+    fun providePersonalMarkers(userID:String){
+        viewModelScope.launch {
+            repository.getUserMarkers(userID){
+                _userMarkers.value = transformMarker(it)
+            }
+        }
     }
 
     private fun transformMarker(marker:FirebaseMarker?):Pair<MarkerOptions,Uri>{

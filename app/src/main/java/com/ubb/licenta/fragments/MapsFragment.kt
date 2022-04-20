@@ -83,12 +83,20 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         newMarkerImageURI = MapsFragmentArgs.fromBundle(arguments!!).markerImageUri
         Log.i("URI",newMarkerImageURI.toString())
 
-        viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
+        viewModel.providePersonalMarkers(currentUser!!)
+        viewModel.userMarkers.observe(this,androidx.lifecycle.Observer{
             if (this::map.isInitialized){
                 val marker = map.addMarker(it.first)
                 marker?.tag = it.second.toString()
             }
         })
+
+//        viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
+//            if (this::map.isInitialized){
+//                val marker = map.addMarker(it.first)
+//                marker?.tag = it.second.toString()
+//            }
+//        })
 
         val firebaseRepo = FirebaseRepository()
 
@@ -100,10 +108,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 //            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADCIM%2FCamera%2FIMG_20220326_111041.jpg")
 //            ) }
 
-        lifecycleScope.launch{
-            firebaseRepo.getMarkersTest()
-        }
-        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.getUserMarkers(it) }
 
         mapFragment?.getMapAsync(this)
     }

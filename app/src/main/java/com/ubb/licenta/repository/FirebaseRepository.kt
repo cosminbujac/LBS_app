@@ -2,27 +2,30 @@ package com.ubb.licenta.repository
 
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import com.firebase.geofire.*
+import com.firebase.geofire.GeoFire
+import com.firebase.geofire.GeoLocation
 import com.freelapp.geofire.asTypedFlow
 import com.freelapp.geofire.model.LocationData
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.ubb.licenta.model.FirebaseMarker
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class FirebaseRepository:IRepository {
 
@@ -31,52 +34,28 @@ class FirebaseRepository:IRepository {
 
     var nearbyMarkers: Flow<Map<String, LocationData<FirebaseMarker?>>>? = null
 
-
-    override suspend fun getMarkersTest() {
-        val geoFire = GeoFire(database.getReference("Locations"))
-        val query = geoFire.queryAtLocation(GeoLocation(46.758214146338597, 23.54403594482969),10.0)
-        val nearbyMarkers: Flow<Map<String, LocationData<FirebaseMarker?>>> =
-            query
-                .asTypedFlow<FirebaseMarker>(database.getReference("Markers"))
-                .flowOn(Dispatchers.IO)
-                .onEach { map ->
-                    map.onEach {
-                        val key = it.key
-                        val (geoLocation, dataSnapshot) = it.value
-                        Log.i("LOCATION",it.toString())
-                    }
-                }
-        nearbyMarkers.collect()
-    }
-
-    suspend fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
+     override fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
         val geoFire = GeoFire(database.getReference("Locations"))
         val query = geoFire.queryAtLocation(GeoLocation(currentLocation.latitude,currentLocation.longitude),distance)
         nearbyMarkers =
             query
                 .asTypedFlow<FirebaseMarker>(database.getReference("Markers"))
                 .flowOn(Dispatchers.IO)
-//        nearbyMarkers!!.collect {
-//            Log.i("Flow","Flow done ${closeMarkers.size}")
-//        }
-//        Log.i("closeMarkers",closeMarkers.size.toString())
-//        return closeMarkers
     }
 
-    override fun getUserMarkers(userID: String) {
+
+     override fun getUserMarkers(userID: String,viewModelCallBack : (FirebaseMarker?) -> Unit){
         database.getReference("Markers").orderByChild("userID").equalTo(userID).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 var marker:FirebaseMarker? = null
                 snapshot.children.forEach {
                     marker = it.getValue(FirebaseMarker::class.java)
-                    Log.i("UserMarkers", marker.toString())
+                    viewModelCallBack(marker)
                 }
             }
-
             override fun onCancelled(error: DatabaseError) {
-                Log.i("UserMarkers",error.toString())
+                Log.e("PersonalMarkersRepo",error.toString())
             }
-
         })
     }
 
@@ -92,9 +71,6 @@ class FirebaseRepository:IRepository {
         }.addOnFailureListener{
             throw Exception("")
         }
-
-
-
     }
 
     private fun uploadMarker(userID: String,markerOptions: MarkerOptions,imageUri: Uri){
@@ -109,4 +85,5 @@ class FirebaseRepository:IRepository {
         val geoFire = GeoFire(database.getReference("Locations"))
         geoFire.setLocation(newReference.key, GeoLocation(markerOptions.position.latitude,markerOptions.position.longitude))
     }
+
 }
