@@ -53,6 +53,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private val binding get() =_binding!!
 
     val startedTracking = MutableLiveData<Boolean>(false)
+    var drawnTrackedPolyline:Polyline? = null
     private var myLocation: Location? = null
 
     private val viewModel by viewModels<MapsViewModel>()
@@ -175,7 +176,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     }
 
     private fun drawTrackedRoute(){
-        val polyline = map.addPolyline(
+        val oldDrawing = drawnTrackedPolyline
+        drawnTrackedPolyline = map.addPolyline(
             PolylineOptions().apply {
                 width(10f)
                 color(Color.BLUE)
@@ -185,13 +187,14 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 addAll(trackedLocationList)
             }
         )
-
+        oldDrawing?.remove()
     }
 
 
 
     private fun setTracker(map: GoogleMap) {
         binding.startTrackButton.setOnClickListener{
+            drawnTrackedPolyline?.remove()
             sendActionCommandService(ACTION_SERVICE_START)
             disableButton(binding.startTrackButton)
             enableButton(binding.stopTrackButton)
