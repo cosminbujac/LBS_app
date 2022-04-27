@@ -90,19 +90,23 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
       when(item.itemId)  {
           R.id.menu_walked_routes ->{
               if(drawnTrackedRoutes.isEmpty()){
-                  Log.i("Menu","WalkedRoutes")
-                  viewModel.userPolyline.observe(viewLifecycleOwner){
-                      drawRoute(it)
+                  lifecycle.coroutineScope.launch {
+                      Log.i("Menu","WalkedRoutes")
+                      viewModel.userPolyline.observe(viewLifecycleOwner){
+                          drawRoute(it)
+                      }
+                      viewModel.getUserPolyline(currentUser!!)
+                      item.title = "Hide walked paths"
                   }
-                  viewModel.getUserPolyline(currentUser!!)
-                  item.title = "Hide walked paths"
               }
               else{
-                  drawnTrackedRoutes.forEach {
-                      it.remove()
+                  lifecycle.coroutineScope.launch {
+                      drawnTrackedRoutes.forEach {
+                          it.remove()
+                      }
+                      drawnTrackedRoutes.clear()
+                      item.title = getString(R.string.show_tracked_paths)
                   }
-                  drawnTrackedRoutes.clear()
-                  item.title = getString(R.string.show_tracked_paths)
               }
 
           }
