@@ -21,7 +21,6 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
-import com.google.maps.android.PolyUtil
 
 
 import com.maps.route.extensions.drawRouteOnMap
@@ -30,10 +29,13 @@ import com.maps.route.model.TravelMode
 import com.ubb.licenta.adapters.CustomInfoAdapter
 import com.ubb.licenta.R
 import com.ubb.licenta.databinding.FragmentMapsBinding
-import com.ubb.licenta.repository.FirebaseRepository
+import com.ubb.licenta.model.Result
 import com.ubb.licenta.service.TrackerService
+import com.ubb.licenta.service.TrackerService.Companion.locationList
 import com.ubb.licenta.utils.Constants.ACTION_SERVICE_START
 import com.ubb.licenta.utils.Constants.ACTION_SERVICE_STOP
+import com.ubb.licenta.utils.MapUtil.calculateElapsedTime
+import com.ubb.licenta.utils.MapUtil.calculateTheDistance
 import com.ubb.licenta.utils.MapUtil.setCameraPosition
 import com.ubb.licenta.viewmodels.MapsViewModel
 import kotlinx.coroutines.delay
@@ -57,9 +59,12 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     private var newMarker : Marker? = null;
 
-    private var trackingLocationList = mutableListOf<LatLng>()
+    private var trackedLocationList = mutableListOf<LatLng>()
 
     private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+
+    private var startTime = 0L
+    private var stopTime = 0L
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -83,32 +88,12 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         newMarkerImageURI = MapsFragmentArgs.fromBundle(arguments!!).markerImageUri
         Log.i("URI",newMarkerImageURI.toString())
 
-        viewModel.providePersonalMarkers(currentUser!!)
-        // get user markers
-//        viewModel.userMarkers.observe(this,androidx.lifecycle.Observer{
-//            if (this::map.isInitialized){
-//                val marker = map.addMarker(it.first)
-//                marker?.tag = it.second.toString()
-//            }
-//        })
-
-        //get close markers
         viewModel.closeMarkers.observe(this,androidx.lifecycle.Observer{
             if (this::map.isInitialized){
                 val marker = map.addMarker(it.first)
                 marker?.tag = it.second.toString()
             }
         })
-        val firebaseRepo = FirebaseRepository()
-
-//        FirebaseAuth.getInstance().currentUser?.uid?.let { firebaseRepo.storeMarker(it,
-//            MarkerOptions()
-//                .position(LatLng(46.758214146338529, 23.54403594482924))
-//                .title("titleTest3 ")
-//                .snippet("DescriptionTest3"),
-//            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADCIM%2FCamera%2FIMG_20220326_111041.jpg")
-//            ) }
-
 
         mapFragment?.getMapAsync(this)
     }
@@ -129,24 +114,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             myLocation = viewModel.myLocation.value
         })
 
-        //TODO cut this line of code and implement on user request to appear an overlay
-        //TODO implement marker updates on location change
-        viewModel.getUserPolyline("MfNfrJCReHcQ8CvoIWFftG2uDWH3")
-        viewModel.userPolyline.observe(this,androidx.lifecycle.Observer{
-            map.addPolyline(
-                PolylineOptions().apply {
-                    width(10f)
-                    color(Color.RED)
-                    jointType(JointType.ROUND)
-                    startCap(ButtCap())
-                    endCap(ButtCap())
-                    addAll(it)
-                }
-            )
-        })
-
-
-
         lifecycle.coroutineScope.launch {
             delay(1000)
             if(myLocation!=null){
@@ -157,6 +124,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                         )),1000,null)
             }
         }
+
 
 
         map.uiSettings.apply {
@@ -174,15 +142,36 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     }
 
     private fun observerTrackerService(){
-        TrackerService.locationList.observe(viewLifecycleOwner) {
+        locationList.observe(viewLifecycleOwner) {
             if (it != null) {
-                trackingLocationList = it
+                trackedLocationList = it
                 drawTrackedRoute()
             }
+        }
+        TrackerService.startTime.observe(viewLifecycleOwner) {
+            startTime = it
         }
         TrackerService.started.observe(viewLifecycleOwner){
             startedTracking.value = it
         }
+        TrackerService.stopTime.observe(viewLifecycleOwner) {
+            stopTime = it
+            if(stopTime!=0L){
+                showBiggerPicture()
+                displayResults()
+                saveTrackedRoute()
+            }
+        }
+    }
+
+    private fun displayResults(){
+        val result = Result(calculateTheDistance(trackedLocationList),calculateElapsedTime(startTime,stopTime))
+        lifecycleScope.launch {
+            delay(2500L)
+            val directions =  MapsFragmentDirections.actionMapsFragmentToResultFragment(result)
+            findNavController().navigate(directions)
+        }
+
     }
 
     private fun drawTrackedRoute(){
@@ -193,7 +182,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 jointType(JointType.ROUND)
                 startCap(ButtCap())
                 endCap(ButtCap())
-                addAll(trackingLocationList)
+                addAll(trackedLocationList)
             }
         )
 
@@ -209,22 +198,20 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         }
         binding.stopTrackButton.setOnClickListener{
             sendActionCommandService(ACTION_SERVICE_STOP)
-            showBiggerPicture()
-            saveTrackedRoute()
             disableButton(binding.stopTrackButton)
             enableButton(binding.startTrackButton)
         }
     }
 
     private fun saveTrackedRoute() {
-        viewModel.savePolyline(trackingLocationList, currentUser!!)
-        trackingLocationList.clear()
+        viewModel.savePolyline(trackedLocationList, currentUser!!)
+        trackedLocationList.clear()
 
     }
 
     private fun showBiggerPicture() {
         val bounds = LatLngBounds.Builder()
-        for(location in trackingLocationList){
+        for(location in trackedLocationList){
             bounds.include(location)
         }
         map.animateCamera(

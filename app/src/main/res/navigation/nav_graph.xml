@@ -65,6 +65,9 @@
             app:argType="android.net.Uri"
             app:nullable="true"
             android:defaultValue="@null"/>
+        <action
+            android:id="@+id/action_mapsFragment_to_resultFragment"
+            app:destination="@id/resultFragment" />
     </fragment>
     <fragment
         android:id="@+id/newMarkerFragment"
@@ -89,4 +92,18 @@
             android:name="LatLng"
             app:argType="com.google.android.gms.maps.model.LatLng" />
     </fragment>
+    <dialog
+        android:id="@+id/resultFragment"
+        android:name="com.ubb.licenta.fragments.ResultFragment"
+        android:label="ResultFragment" >
+        <action
+            android:id="@+id/action_resultFragment_to_mapsFragment"
+            app:destination="@id/mapsFragment"
+            app:popUpTo="@id/resultFragment"
+            app:popUpToInclusive="true" />
+        <argument
+            android:name="result"
+            app:argType="com.ubb.licenta.model.Result"
+            />
+    </dialog>
 </navigation>
