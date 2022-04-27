@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item
+    android:id="@+id/menu_walked_routes"
+    android:title="@string/show_tracked_paths"
+    />
+
+    <item
+        android:id="@+id/menu_heatmap"
+        android:title="@string/show_heatmap"
+        />
+</menu>

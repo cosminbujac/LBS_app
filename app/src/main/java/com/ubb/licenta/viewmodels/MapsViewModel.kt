@@ -113,6 +113,7 @@ class MapsViewModel : ViewModel() {
     fun getUserPolyline(userID: String){
         viewModelScope.launch {
             repository.getUserPolyline(userID){
+                Log.i("UserPolyline",it!!)
                 val decodedPolyline = PolyUtil.decode(it)
                 _userPolyline.value = decodedPolyline
             }

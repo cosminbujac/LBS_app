@@ -9,9 +9,7 @@ import androidx.fragment.app.Fragment
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
@@ -41,6 +39,7 @@ import com.ubb.licenta.viewmodels.MapsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MapsFragment : Fragment(),OnMapReadyCallback {
@@ -54,6 +53,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     val startedTracking = MutableLiveData<Boolean>(false)
     var drawnTrackedPolyline:Polyline? = null
+    private var drawnTrackedRoutes = ArrayList<Polyline>()
     private var myLocation: Location? = null
 
     private val viewModel by viewModels<MapsViewModel>()
@@ -77,9 +77,40 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         binding.lifecycleOwner = this
         binding.tracking = this
 
-
+        setHasOptionsMenu(true)
 
         return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_maps,menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+      when(item.itemId)  {
+          R.id.menu_walked_routes ->{
+              if(drawnTrackedRoutes.isEmpty()){
+                  Log.i("Menu","WalkedRoutes")
+                  viewModel.userPolyline.observe(viewLifecycleOwner){
+                      drawRoute(it)
+                  }
+                  viewModel.getUserPolyline(currentUser!!)
+                  item.title = "Hide walked paths"
+              }
+              else{
+                  drawnTrackedRoutes.forEach {
+                      it.remove()
+                  }
+                  drawnTrackedRoutes.clear()
+                  item.title = getString(R.string.show_tracked_paths)
+              }
+
+          }
+          R.id.menu_heatmap ->{
+              Log.i("Menu","Heatmap")
+          }
+      }
+        return true
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -188,6 +219,20 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             }
         )
         oldDrawing?.remove()
+    }
+
+    private fun drawRoute(coordinates: List<LatLng>){
+        val polyline = map.addPolyline(
+            PolylineOptions().apply {
+                width(10f)
+                color(Color.GREEN)
+                jointType(JointType.ROUND)
+                startCap(ButtCap())
+                endCap(ButtCap())
+                addAll(coordinates)
+            }
+        )
+        drawnTrackedRoutes.add(polyline)
     }
 
 
