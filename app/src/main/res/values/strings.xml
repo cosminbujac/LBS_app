@@ -27,5 +27,7 @@
     <string name="show_tracked_paths">Show Tracked Paths</string>
     <string name="show_heatmap">Show Heatmap</string>
     <string name="show_personal_markers">Show Personal Markers</string>
+    <string name="clear_map">Clear Map</string>
+    <string name="show_close_markers">Show close markers</string>
 
 </resources>

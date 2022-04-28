@@ -34,6 +34,10 @@ class MapsViewModel : ViewModel() {
     private val _userMarkers = MutableLiveData<Pair<MarkerOptions,Uri>>()
     val userMarkers get() =_userMarkers
 
+
+    private val _heatmapList = MutableLiveData<List<LatLng>>()
+    val heatmapList get() =_heatmapList
+
     val repository = FirebaseRepository()
 
     @SuppressLint("MissingPermission")
@@ -61,9 +65,8 @@ class MapsViewModel : ViewModel() {
 
     fun provideCloseMarkers(){
         val location = LatLng(myLocation.value!!.latitude,myLocation.value!!.longitude)
-        var markers: List<FirebaseMarker>? = null
         viewModelScope.launch {
-            repository.getNearbyMarkers(2.0,location)
+            repository.getNearbyMarkers(1.2,location)
             repository.nearbyMarkers?.collect{
                   Log.i("ViewModel", it.toString())
                 it.forEach { map->
@@ -71,7 +74,6 @@ class MapsViewModel : ViewModel() {
                     _closeMarkers.value = transformMarker(marker,CLOSE_MARKER_COLOR)
                 }
             }
-            Log.i("ViewModel", markers!!.first().toString())
         }
     }
 
@@ -110,6 +112,20 @@ class MapsViewModel : ViewModel() {
                 Log.i("UserPolyline",it!!)
                 val decodedPolyline = PolyUtil.decode(it)
                 _userPolyline.value = decodedPolyline
+            }
+        }
+    }
+
+    fun getHeatmapLatLng(userID: String){
+        viewModelScope.launch {
+            repository.getUserHeatmap(userID){snapshot ->
+                val latLngList = ArrayList<LatLng>()
+                snapshot?.children?.forEach {
+                    val encodedPoly = it.child("polyline").getValue(String::class.java)
+                    val decodedPolyline = PolyUtil.decode(encodedPoly)
+                    latLngList.addAll(decodedPolyline)
+                }
+                _heatmapList.value = latLngList
             }
         }
     }

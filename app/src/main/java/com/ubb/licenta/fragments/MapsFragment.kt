@@ -19,6 +19,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
+import com.google.maps.android.heatmaps.Gradient
+import com.google.maps.android.heatmaps.HeatmapTileProvider
 
 
 import com.maps.route.extensions.drawRouteOnMap
@@ -65,6 +67,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private var trackedLocationList = mutableListOf<LatLng>()
 
     private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+
+    private var heatmapOverlay = ArrayList<TileOverlay>()
 
     private var startTime = 0L
     private var stopTime = 0L
@@ -113,13 +117,41 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
           }
           R.id.menu_heatmap ->{
-              Log.i("Menu","Heatmap")
+              if(heatmapOverlay.isEmpty()){
+                  val colors = intArrayOf(
+                      Color.rgb(102, 225, 0),  // green
+                      Color.rgb(255, 0, 0) // red
+                  )
+                  val gradient = Gradient(colors,floatArrayOf(0.2f, 1f))
+                  viewModel.getHeatmapLatLng(currentUser!!)
+                  viewModel.heatmapList.observe(viewLifecycleOwner){
+                      val provider = HeatmapTileProvider.Builder()
+                          .data(it)
+                          .gradient(gradient)
+                          .build()
+
+                      val overlay =  map.addTileOverlay(
+                          TileOverlayOptions()
+                              .tileProvider(provider)
+                      )
+                      heatmapOverlay.add(overlay!!)
+                      showBiggerPicture(it)
+                      item.title = "Hide Heatmap"
+                  }
+              }
+              else{
+                  heatmapOverlay.forEach {
+                      it.remove()
+                  }
+                  heatmapOverlay.clear()
+                  item.title = getString(R.string.show_heatmap)
+              }
+
           }
           R.id.menu_personal_markers ->{
               Log.i("Menu","PersonalMarkers")
               if(markersOnMap.isEmpty()){
                   lifecycle.coroutineScope.launch {
-                      map.clear()
                       item.title = "Hide Personal Markers"
                       viewModel.userMarkers.observe(viewLifecycleOwner){
                           val marker = map.addMarker(it.first)
@@ -138,8 +170,15 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                   viewModel.provideCloseMarkers()
 
               }
-
-
+          }
+          R.id.menu_close_markers ->{
+              viewModel.provideCloseMarkers()
+          }
+          R.id.menu_clean ->{
+              map.clear()
+              drawnTrackedRoutes.clear()
+              markersOnMap.clear()
+              heatmapOverlay.clear()
           }
       }
         return true
@@ -221,7 +260,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         TrackerService.stopTime.observe(viewLifecycleOwner) {
             stopTime = it
             if(stopTime!=0L){
-                showBiggerPicture()
+                showBiggerPicture(trackedLocationList)
                 displayResults()
                 saveTrackedRoute()
             }
@@ -289,9 +328,9 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     }
 
-    private fun showBiggerPicture() {
+    private fun showBiggerPicture(boundList : List<LatLng>) {
         val bounds = LatLngBounds.Builder()
-        for(location in trackedLocationList){
+        for(location in boundList){
             bounds.include(location)
         }
         map.animateCamera(

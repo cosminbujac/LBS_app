@@ -108,4 +108,15 @@ class FirebaseRepository:IRepository {
         })
     }
 
+    fun getUserHeatmap(userID: String,viewModelCallBack : (DataSnapshot?) -> Unit){
+        database.getReference("Polyline").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                viewModelCallBack(snapshot)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("PersonalMarkersRepo",error.toString())
+            }
+        })
+    }
+
 }
