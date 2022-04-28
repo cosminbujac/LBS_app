@@ -20,5 +20,6 @@ object Constants {
 
     const val DATABASE_URL ="https://licenta-a92c7-default-rtdb.europe-west1.firebasedatabase.app"
 
-    val SAVED_MARKER_COLOR = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+    val CLOSE_MARKER_COLOR = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+    val PERSONAL_MARKER_COLOR = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
 }

@@ -7,21 +7,15 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.maps.android.PolyUtil
-import com.ubb.licenta.livedata.FirebaseUserLiveData
 import com.ubb.licenta.model.FirebaseMarker
 import com.ubb.licenta.repository.FirebaseRepository
-import com.ubb.licenta.repository.IRepository
-import com.ubb.licenta.utils.Constants.SAVED_MARKER_COLOR
-import kotlinx.coroutines.flow.collect
+import com.ubb.licenta.utils.Constants.CLOSE_MARKER_COLOR
+import com.ubb.licenta.utils.Constants.PERSONAL_MARKER_COLOR
 import kotlinx.coroutines.launch
 
 class MapsViewModel : ViewModel() {
@@ -74,7 +68,7 @@ class MapsViewModel : ViewModel() {
                   Log.i("ViewModel", it.toString())
                 it.forEach { map->
                     val marker = map.value.data
-                    _closeMarkers.value = transformMarker(marker)
+                    _closeMarkers.value = transformMarker(marker,CLOSE_MARKER_COLOR)
                 }
             }
             Log.i("ViewModel", markers!!.first().toString())
@@ -88,17 +82,17 @@ class MapsViewModel : ViewModel() {
     fun providePersonalMarkers(userID:String){
         viewModelScope.launch {
             repository.getUserMarkers(userID){
-                _userMarkers.value = transformMarker(it)
+                _userMarkers.value = transformMarker(it, PERSONAL_MARKER_COLOR)
             }
         }
     }
 
-    private fun transformMarker(marker:FirebaseMarker?):Pair<MarkerOptions,Uri>{
+    private fun transformMarker(marker:FirebaseMarker?, icon: BitmapDescriptor):Pair<MarkerOptions,Uri>{
         return Pair(MarkerOptions()
             .title(marker?.title)
             .snippet(marker?.description)
             .position(LatLng(marker!!.lat, marker.lng))
-            .icon(SAVED_MARKER_COLOR),
+            .icon(icon),
             Uri.parse(marker.imageUrl)
         )
 

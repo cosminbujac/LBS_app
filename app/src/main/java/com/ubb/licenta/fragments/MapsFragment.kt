@@ -60,6 +60,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     private var newMarker : Marker? = null;
 
+    private val markersOnMap = ArrayList<Marker>()
+
     private var trackedLocationList = mutableListOf<LatLng>()
 
     private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
@@ -112,6 +114,32 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
           }
           R.id.menu_heatmap ->{
               Log.i("Menu","Heatmap")
+          }
+          R.id.menu_personal_markers ->{
+              Log.i("Menu","PersonalMarkers")
+              if(markersOnMap.isEmpty()){
+                  lifecycle.coroutineScope.launch {
+                      map.clear()
+                      item.title = "Hide Personal Markers"
+                      viewModel.userMarkers.observe(viewLifecycleOwner){
+                          val marker = map.addMarker(it.first)
+                          marker!!.tag = it.second
+                          markersOnMap.add(marker)
+                      }
+                      viewModel.providePersonalMarkers(currentUser!!)
+                  }
+              }
+              else{
+                  markersOnMap.forEach {
+                      it.remove()
+                  }
+                  markersOnMap.clear()
+                  item.title = getString(R.string.show_personal_markers)
+                  viewModel.provideCloseMarkers()
+
+              }
+
+
           }
       }
         return true

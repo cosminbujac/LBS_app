@@ -26,5 +26,6 @@
     <string name="time_result">%1$s km</string>
     <string name="show_tracked_paths">Show Tracked Paths</string>
     <string name="show_heatmap">Show Heatmap</string>
+    <string name="show_personal_markers">Show Personal Markers</string>
 
 </resources>

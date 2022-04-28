@@ -9,4 +9,9 @@
         android:id="@+id/menu_heatmap"
         android:title="@string/show_heatmap"
         />
+
+    <item
+        android:id="@+id/menu_personal_markers"
+        android:title="@string/show_personal_markers"
+        />
 </menu>
