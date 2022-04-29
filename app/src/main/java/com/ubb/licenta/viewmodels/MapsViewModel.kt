@@ -4,18 +4,20 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.net.Uri
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.PolyUtil
 import com.ubb.licenta.model.FirebaseMarker
 import com.ubb.licenta.repository.FirebaseRepository
+import com.ubb.licenta.utils.Constants
 import com.ubb.licenta.utils.Constants.CLOSE_MARKER_COLOR
 import com.ubb.licenta.utils.Constants.PERSONAL_MARKER_COLOR
+import com.ubb.licenta.utils.MapUtil
 import kotlinx.coroutines.launch
 
 class MapsViewModel : ViewModel() {
@@ -41,20 +43,21 @@ class MapsViewModel : ViewModel() {
     val repository = FirebaseRepository()
 
     @SuppressLint("MissingPermission")
-    fun init(context: Context) {
+    fun init(context: Context,currentUser: String) {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
         //get location and get the closest markers to said location
         viewModelScope.launch {
             val location = fusedLocationProviderClient.lastLocation
             location.addOnCompleteListener {
                 _myLocation.value = location.result
-                provideCloseMarkers()
+                provideCloseMarkers(currentUser)
             }
+            constantlyUpdateLocation()
         }
     }
 
     @SuppressLint("MissingPermission")
-    fun updateMyLocation(){
+    fun getMyLocation(){
         viewModelScope.launch {
             val location = fusedLocationProviderClient.lastLocation
             location.addOnCompleteListener {
@@ -63,7 +66,34 @@ class MapsViewModel : ViewModel() {
         }
     }
 
-    fun provideCloseMarkers(){
+    @SuppressLint("MissingPermission")
+    fun constantlyUpdateLocation(){
+        val locationCallback = object: LocationCallback(){
+            override fun onLocationResult(result: LocationResult) {
+                super.onLocationResult(result)
+                val currentLocation = LatLng(result.lastLocation.latitude,result.lastLocation.longitude)
+                val lastLocation = myLocation.value?.let { LatLng(it.latitude, myLocation.value!!.longitude) }
+                if(MapUtil.calculateTheDistanceLocationUpdate(lastLocation,currentLocation)>=100.0){
+                    myLocation.postValue(result.lastLocation)
+                    Log.i("LocationCox",myLocation.value.toString())
+                }
+
+            }
+        }
+        val locationRequest  = LocationRequest().apply {
+
+            interval = Constants.LOCATION_USUAL_UPDATE_INTERVAL
+            fastestInterval = Constants.LOCATION_MAX_UPDATE_INTERVAL
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
+    }
+
+    fun provideCloseMarkers(userID:String){
         val location = LatLng(myLocation.value!!.latitude,myLocation.value!!.longitude)
         viewModelScope.launch {
             repository.getNearbyMarkers(1.2,location)
@@ -71,7 +101,8 @@ class MapsViewModel : ViewModel() {
                   Log.i("ViewModel", it.toString())
                 it.forEach { map->
                     val marker = map.value.data
-                    _closeMarkers.value = transformMarker(marker,CLOSE_MARKER_COLOR)
+                   if (marker!!.userID != userID)
+                        _closeMarkers.value = transformMarker(marker,CLOSE_MARKER_COLOR)
                 }
             }
         }

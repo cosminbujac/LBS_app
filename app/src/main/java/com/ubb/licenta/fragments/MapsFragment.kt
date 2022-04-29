@@ -62,7 +62,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     private var newMarker : Marker? = null;
 
-    private val markersOnMap = ArrayList<Marker>()
+    private val personalMarkersOnMap = ArrayList<Marker>()
+    private val closeMarkersOnMap = ArrayList<Marker>()
 
     private var trackedLocationList = mutableListOf<LatLng>()
 
@@ -78,7 +79,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel.init(requireContext())
+        viewModel.init(requireContext(),currentUser!!)
         _binding = FragmentMapsBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.tracking = this
@@ -99,10 +100,10 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                   lifecycle.coroutineScope.launch {
                       Log.i("Menu","WalkedRoutes")
                       viewModel.userPolyline.observe(viewLifecycleOwner){
-                          drawRoute(it)
+                          drawWalkedRoute(it)
                       }
                       viewModel.getUserPolyline(currentUser!!)
-                      item.title = "Hide walked paths"
+                      item.title = "Hide Walked Paths"
                   }
               }
               else{
@@ -150,35 +151,35 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
           }
           R.id.menu_personal_markers ->{
               Log.i("Menu","PersonalMarkers")
-              if(markersOnMap.isEmpty()){
+              if(personalMarkersOnMap.isEmpty()){
                   lifecycle.coroutineScope.launch {
                       item.title = "Hide Personal Markers"
                       viewModel.userMarkers.observe(viewLifecycleOwner){
                           val marker = map.addMarker(it.first)
                           marker!!.tag = it.second
-                          markersOnMap.add(marker)
+                          personalMarkersOnMap.add(marker)
                       }
                       viewModel.providePersonalMarkers(currentUser!!)
                   }
               }
               else{
-                  markersOnMap.forEach {
+                  personalMarkersOnMap.forEach {
                       it.remove()
                   }
-                  markersOnMap.clear()
+                  personalMarkersOnMap.clear()
                   item.title = getString(R.string.show_personal_markers)
-                  viewModel.provideCloseMarkers()
 
               }
           }
           R.id.menu_close_markers ->{
-              viewModel.provideCloseMarkers()
+              viewModel.provideCloseMarkers(currentUser!!)
           }
           R.id.menu_clean ->{
               map.clear()
               drawnTrackedRoutes.clear()
-              markersOnMap.clear()
+              personalMarkersOnMap.clear()
               heatmapOverlay.clear()
+              closeMarkersOnMap.clear()
           }
       }
         return true
@@ -195,6 +196,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             if (this::map.isInitialized){
                 val marker = map.addMarker(it.first)
                 marker?.tag = it.second.toString()
+                closeMarkersOnMap.add(marker!!)
             }
         })
 
@@ -215,6 +217,12 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
         viewModel.myLocation.observe(this, androidx.lifecycle.Observer {
             myLocation = viewModel.myLocation.value
+            if(closeMarkersOnMap.isNotEmpty()){
+                closeMarkersOnMap.forEach {
+                    it.remove()
+                }
+                viewModel.provideCloseMarkers(currentUser!!)
+            }
         })
 
         lifecycle.coroutineScope.launch {
@@ -230,6 +238,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
 
 
+
         map.uiSettings.apply {
             isZoomControlsEnabled = true
             isRotateGesturesEnabled = false
@@ -239,7 +248,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         setMapLongClick(map)
         setOnMapClick(map)
         setOnMarkerClick(map)
-        setTracker(map)
+        setTracker()
 
         observerTrackerService()
     }
@@ -292,7 +301,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
         oldDrawing?.remove()
     }
 
-    private fun drawRoute(coordinates: List<LatLng>){
+    private fun drawWalkedRoute(coordinates: List<LatLng>){
         val polyline = map.addPolyline(
             PolylineOptions().apply {
                 width(10f)
@@ -308,7 +317,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
 
 
-    private fun setTracker(map: GoogleMap) {
+    private fun setTracker() {
         binding.startTrackButton.setOnClickListener{
             drawnTrackedPolyline?.remove()
             sendActionCommandService(ACTION_SERVICE_START)
@@ -325,7 +334,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private fun saveTrackedRoute() {
         viewModel.savePolyline(trackedLocationList, currentUser!!)
         trackedLocationList.clear()
-
     }
 
     private fun showBiggerPicture(boundList : List<LatLng>) {
@@ -346,7 +354,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private fun drawRouteToLocation(source:LatLng, destination:LatLng){
         map.run {
             moveCameraOnMap(latLng = source) // if you want to zoom the map to any point
-
             //Called the drawRouteOnMap extension to draw the polyline/route on google maps
             drawRouteOnMap(
                 getString(R.string.google_map_api_key), //your API key
@@ -360,7 +367,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
 
     private fun setMapLongClick(map: GoogleMap) {
-
         map.setOnMapLongClickListener { latLng ->
             newMarker?.remove()
             // A snippet is additional text that's displayed after the title.
@@ -388,7 +394,6 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     }
 
     private fun setOnMapClick(map:GoogleMap){
-
         map.setOnMapClickListener {
             newMarker?.remove()
             newMarker = null
@@ -408,23 +413,15 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 binding.goToButton.setOnClickListener{
                     lifecycle.coroutineScope.launch {
                         val destination = marker.position
-                        viewModel.updateMyLocation()
+                        viewModel.getMyLocation()
                         delay(500)
                         val origin = LatLng(myLocation!!.latitude,myLocation!!.longitude)
                         disableButton(binding.goToButton)
                         drawRouteToLocation(origin,destination)
                     }
-
                 }
-
             }
             false
-        }
-    }
-
-    private fun addMarkerOnMap(options: MarkerOptions){
-        if (this::map.isInitialized){
-            map.addMarker(options)
         }
     }
 

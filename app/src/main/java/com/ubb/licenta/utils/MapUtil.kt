@@ -20,7 +20,7 @@ object MapUtil {
         val hours = (elapsedTime/(1000*60*60)).toInt() % 24
 
 
-        return "$hours:$minutes:$seconds"
+        return "$hours" + "h:$minutes" +"m:$seconds" + "s"
     }
 
     fun calculateTheDistance(locationList:MutableList<LatLng>):String{
@@ -33,5 +33,11 @@ object MapUtil {
             return DecimalFormat("#.##").format(km)
         }
         return "0.00"
+    }
+
+    fun calculateTheDistanceLocationUpdate(startPoint:LatLng?, endPoint:LatLng):Double{
+        if(startPoint == null)
+            return 101.1
+        return SphericalUtil.computeDistanceBetween(startPoint, endPoint)
     }
 }

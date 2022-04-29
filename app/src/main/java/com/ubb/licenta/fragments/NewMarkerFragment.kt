@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.ubb.licenta.R
 import com.ubb.licenta.databinding.FragmentNewMarkerBinding
 import com.ubb.licenta.utils.Constants.IMAGE_REQUEST_CODE
+import com.ubb.licenta.utils.Constants.PERSONAL_MARKER_COLOR
 
 
 class NewMarkerFragment : Fragment() {
@@ -28,9 +29,7 @@ class NewMarkerFragment : Fragment() {
     private var _binding :FragmentNewMarkerBinding? = null
     private val binding get() =_binding!!
 
-    //private lateinit var imageView:ImageView
     private var imageURI:Uri? = null
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +67,7 @@ class NewMarkerFragment : Fragment() {
                     .title(title)
                     .snippet(description)
                     .position(position)
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                    .icon(PERSONAL_MARKER_COLOR)
                 val action = NewMarkerFragmentDirections.actionNewMarkerFragmentToMapsFragment(markerOptions,imageURI)
                 findNavController().navigate(action)
             }
@@ -88,7 +87,7 @@ class NewMarkerFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && requestCode == IMAGE_REQUEST_CODE){
-            imageURI = data?.data // handle chosen image
+            imageURI = data?.data
         }
     }
 }

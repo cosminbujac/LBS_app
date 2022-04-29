@@ -24,13 +24,4 @@ class FirebaseUserLiveData : LiveData<FirebaseUser?>() {
         firebaseAuth.removeAuthStateListener(authStateListener)
     }
 
-    fun something(){
-        firebaseAuth.addAuthStateListener{
-
-        }
-    }
-
-
-
-
 }
