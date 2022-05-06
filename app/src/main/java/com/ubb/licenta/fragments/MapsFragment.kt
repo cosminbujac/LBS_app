@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.maps.android.heatmaps.Gradient
 import com.google.maps.android.heatmaps.HeatmapTileProvider
+import com.maps.route.extensions.boundMarkersOnMap
 
 
 import com.maps.route.extensions.drawRouteOnMap
@@ -207,6 +208,10 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.setInfoWindowAdapter(CustomInfoAdapter(context!!))
+        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(
+            requireContext(),
+            R.raw.map_style
+        ))
 
         if(newMarkerOptions!=null && newMarkerImageURI!=null){
             val marker = map.addMarker(newMarkerOptions!!)
@@ -360,7 +365,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 source = source, // Source from where you want to draw path
                 destination = destination, // destination to where you want to draw path
                 context = context!!, //Activity context
-                travelMode = TravelMode.DRIVING
+                boundMarkers = false,
+                travelMode = TravelMode.WALKING
             )
         }
     }

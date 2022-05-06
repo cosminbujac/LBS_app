@@ -96,7 +96,7 @@ class MapsViewModel : ViewModel() {
     fun provideCloseMarkers(userID:String){
         val location = LatLng(myLocation.value!!.latitude,myLocation.value!!.longitude)
         viewModelScope.launch {
-            repository.getNearbyMarkers(1.2,location)
+            repository.getNearbyMarkers(0.6,location)
             repository.nearbyMarkers?.collect{
                   Log.i("ViewModel", it.toString())
                 it.forEach { map->
