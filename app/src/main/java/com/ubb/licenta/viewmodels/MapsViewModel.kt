@@ -12,8 +12,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.PolyUtil
-import com.ubb.licenta.model.FirebaseMarker
+import com.ubb.licenta.model.MarkerDTO
 import com.ubb.licenta.repository.FirebaseRepository
+import com.ubb.licenta.repository.IRepository
 import com.ubb.licenta.utils.Constants
 import com.ubb.licenta.utils.Constants.CLOSE_MARKER_COLOR
 import com.ubb.licenta.utils.Constants.PERSONAL_MARKER_COLOR
@@ -40,7 +41,7 @@ class MapsViewModel : ViewModel() {
     private val _heatmapList = MutableLiveData<List<LatLng>>()
     val heatmapList get() =_heatmapList
 
-    val repository = FirebaseRepository()
+    private val repository : IRepository = FirebaseRepository()
 
     @SuppressLint("MissingPermission")
     fun init(context: Context,currentUser: String) {
@@ -120,7 +121,7 @@ class MapsViewModel : ViewModel() {
         }
     }
 
-    private fun transformMarker(marker:FirebaseMarker?, icon: BitmapDescriptor):Pair<MarkerOptions,Uri>{
+    private fun transformMarker(marker:MarkerDTO?, icon: BitmapDescriptor):Pair<MarkerOptions,Uri>{
         return Pair(MarkerOptions()
             .title(marker?.title)
             .snippet(marker?.description)

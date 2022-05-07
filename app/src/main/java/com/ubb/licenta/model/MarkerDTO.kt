@@ -3,7 +3,7 @@ package com.ubb.licenta.model
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-data class FirebaseMarker (
+data class MarkerDTO (
     var userID: String,
 )
 {

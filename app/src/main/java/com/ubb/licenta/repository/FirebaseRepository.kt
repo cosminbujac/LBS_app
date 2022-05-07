@@ -14,16 +14,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.maps.android.PolyUtil
-import com.ubb.licenta.model.FirebaseMarker
-import kotlinx.coroutines.CancellationException
+import com.ubb.licenta.model.MarkerDTO
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.onSuccess
-import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,26 +25,25 @@ class FirebaseRepository:IRepository {
 
     override val database: FirebaseDatabase
         get() = super.database
+    override var nearbyMarkers: Flow<Map<String, LocationData<MarkerDTO?>>>? = null
 
-    var nearbyMarkers: Flow<Map<String, LocationData<FirebaseMarker?>>>? = null
-
-     override fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
+    override fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
         val geoFire = GeoFire(database.getReference("Locations"))
         val query = geoFire.queryAtLocation(GeoLocation(currentLocation.latitude,currentLocation.longitude),distance)
         nearbyMarkers =
             query
-                .asTypedFlow<FirebaseMarker>(database.getReference("Markers"))
+                .asTypedFlow<MarkerDTO>(database.getReference("Markers"))
                 .flowOn(Dispatchers.IO)
     }
 
 
-     override fun getUserMarkers(userID: String,viewModelCallBack : (FirebaseMarker?) -> Unit){
+     override fun getUserMarkers(userID: String,viewModelCallBack : (MarkerDTO?) -> Unit){
         database.getReference("Markers").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                var marker:FirebaseMarker? = null
+                var markerDTO:MarkerDTO? = null
                 snapshot.children.forEach {
-                    marker = it.getValue(FirebaseMarker::class.java)
-                    viewModelCallBack(marker)
+                    markerDTO = it.getValue(MarkerDTO::class.java)
+                    viewModelCallBack(markerDTO)
                 }
             }
             override fun onCancelled(error: DatabaseError) {
@@ -75,7 +67,7 @@ class FirebaseRepository:IRepository {
     }
 
     private fun uploadMarker(userID: String,markerOptions: MarkerOptions,imageUri: Uri){
-        val firebaseMarker = FirebaseMarker(userID,markerOptions)
+        val firebaseMarker = MarkerDTO(userID,markerOptions)
         firebaseMarker.imageUrl = imageUri.toString()
         val newReference = database.getReference("Markers").push()
         newReference.setValue(firebaseMarker).addOnSuccessListener {
@@ -87,14 +79,14 @@ class FirebaseRepository:IRepository {
         geoFire.setLocation(newReference.key, GeoLocation(markerOptions.position.latitude,markerOptions.position.longitude))
     }
 
-    suspend fun savePolyline(coordinateList:List<LatLng>, userID: String){
+     override fun savePolyline(coordinateList:List<LatLng>, userID: String){
         val dbReference = database.getReference("Polyline").push()
         val encodedPoly = PolyUtil.encode(coordinateList)
         dbReference.child("userID").setValue(userID)
         dbReference.child("polyline").setValue(encodedPoly)
     }
 
-    fun getUserPolyline(userID: String,viewModelCallBack : (String?) -> Unit){
+    override fun getUserPolyline(userID: String,viewModelCallBack : (String?) -> Unit){
         database.getReference("Polyline").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 snapshot.children.forEach {
@@ -108,7 +100,7 @@ class FirebaseRepository:IRepository {
         })
     }
 
-    fun getUserHeatmap(userID: String,viewModelCallBack : (DataSnapshot?) -> Unit){
+    override fun getUserHeatmap(userID: String,viewModelCallBack : (DataSnapshot?) -> Unit){
         database.getReference("Polyline").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 viewModelCallBack(snapshot)
