@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.ubb.licenta.R
 import com.ubb.licenta.viewmodels.LoginViewModel
 
+@Suppress("DEPRECATION")
 class LoginFragment : Fragment() {
 
     companion object {
@@ -41,8 +42,7 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         navController = findNavController()
 
-
-        viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
+        viewModel.authenticationState.observe(viewLifecycleOwner) { authenticationState ->
             when (authenticationState) {
                 LoginViewModel.AuthenticationState.AUTHENTICATED -> {
                     val action =
@@ -50,11 +50,10 @@ class LoginFragment : Fragment() {
                     navController.navigate(action)
                 }
                 else -> {
-                    if(!quitAction) {
+                    if (!quitAction) {
                         launchSignInFlow()
                         quitAction = true;
-                    }
-                    else{
+                    } else {
                         activity?.finish()
                     }
                     Log.e(
@@ -63,19 +62,14 @@ class LoginFragment : Fragment() {
                     )
                 }
             }
-        })
-
+        }
 
     }
 
     private fun launchSignInFlow() {
-        // Give users the option to sign in / register with their email or Google account.
-        // If users choose to register with their email,
-        // they will need to create a password as well.
         val providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build()
-
         )
         startActivityForResult(
             AuthUI.getInstance()
@@ -94,9 +88,7 @@ class LoginFragment : Fragment() {
                 // User successfully signed in.
                 Log.i(PermissionFragment.TAG, "Successfully signed in user ${FirebaseAuth.getInstance().currentUser?.displayName}!")
             } else {
-                // Sign in failed. If response is null, the user canceled the
-                // sign-in flow using the back button. Otherwise, check
-                // the error code and handle the error.
+                // User fails to signed in.
                 Log.i(PermissionFragment.TAG, "Sign in unsuccessful ${response?.error?.errorCode}")
             }
         }
