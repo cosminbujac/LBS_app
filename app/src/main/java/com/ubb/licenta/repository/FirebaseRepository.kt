@@ -26,10 +26,10 @@ class FirebaseRepository:IRepository {
     override val database: FirebaseDatabase
         get() = super.database
     override var nearbyMarkers: Flow<Map<String, LocationData<MarkerDTO?>>>? = null
-
     override fun getNearbyMarkers(distance: Double, currentLocation : LatLng) {
         val geoFire = GeoFire(database.getReference("Locations"))
-        val query = geoFire.queryAtLocation(GeoLocation(currentLocation.latitude,currentLocation.longitude),distance)
+        val query = geoFire.
+        queryAtLocation(GeoLocation(currentLocation.latitude,currentLocation.longitude),distance)
         nearbyMarkers =
             query
                 .asTypedFlow<MarkerDTO>(database.getReference("Markers"))
@@ -38,7 +38,8 @@ class FirebaseRepository:IRepository {
 
 
      override fun getUserMarkers(userID: String,viewModelCallBack : (MarkerDTO?) -> Unit){
-        database.getReference("Markers").orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(object : ValueEventListener {
+        database.getReference("Markers").orderByChild("userID").equalTo(userID)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 var markerDTO:MarkerDTO? = null
                 snapshot.children.forEach {
@@ -62,7 +63,7 @@ class FirebaseRepository:IRepository {
                uploadMarker(userID, markerOptions,it)
             }
         }.addOnFailureListener{
-            throw Exception("")
+            Log.e("ImageUpload",it.toString())
         }
     }
 

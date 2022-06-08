@@ -75,6 +75,8 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
     private var startTime = 0L
     private var stopTime = 0L
 
+    private var optionsMenu:Menu? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -92,99 +94,30 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_maps,menu)
+        optionsMenu = menu
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
       when(item.itemId)  {
           R.id.menu_walked_routes ->{
-              if(drawnTrackedRoutes.isEmpty()){
-                  lifecycle.coroutineScope.launch {
-                      Log.i("Menu","WalkedRoutes")
-                      viewModel.userPolyline.observe(viewLifecycleOwner){
-                          drawWalkedRoute(it)
-                      }
-                      viewModel.getUserPolyline(currentUser!!)
-                      item.title = "Hide Walked Paths"
-                  }
-              }
-              else{
-                  lifecycle.coroutineScope.launch {
-                      drawnTrackedRoutes.forEach {
-                          it.remove()
-                      }
-                      drawnTrackedRoutes.clear()
-                      item.title = getString(R.string.show_tracked_paths)
-                  }
-              }
-
+              menuWalkedRoutes(item)
           }
           R.id.menu_heatmap ->{
-              if(heatmapOverlay.isEmpty()){
-                  val colors = intArrayOf(
-                      Color.rgb(102, 225, 0),  // green
-                      Color.rgb(255, 0, 0) // red
-                  )
-                  val gradient = Gradient(colors,floatArrayOf(0.2f, 1f))
-                  viewModel.getHeatmapLatLng(currentUser!!)
-                  viewModel.heatmapList.observe(viewLifecycleOwner){
-                      val provider = HeatmapTileProvider.Builder()
-                          .data(it)
-                          .gradient(gradient)
-                          .build()
-
-                      val overlay =  map.addTileOverlay(
-                          TileOverlayOptions()
-                              .tileProvider(provider)
-                      )
-                      heatmapOverlay.add(overlay!!)
-                      showBiggerPicture(it)
-                      item.title = "Hide Heatmap"
-                  }
-              }
-              else{
-                  heatmapOverlay.forEach {
-                      it.remove()
-                  }
-                  heatmapOverlay.clear()
-                  item.title = getString(R.string.show_heatmap)
-              }
-
+                menuHeatmap(item)
           }
           R.id.menu_personal_markers ->{
-              Log.i("Menu","PersonalMarkers")
-              if(personalMarkersOnMap.isEmpty()){
-                  lifecycle.coroutineScope.launch {
-                      item.title = "Hide Personal Markers"
-                      viewModel.userMarkers.observe(viewLifecycleOwner){
-                          val marker = map.addMarker(it.first)
-                          marker!!.tag = it.second
-                          personalMarkersOnMap.add(marker)
-                      }
-                      viewModel.providePersonalMarkers(currentUser!!)
-                  }
-              }
-              else{
-                  personalMarkersOnMap.forEach {
-                      it.remove()
-                  }
-                  personalMarkersOnMap.clear()
-                  item.title = getString(R.string.show_personal_markers)
-
-              }
+             menuPersonalMarkers(item)
           }
           R.id.menu_close_markers ->{
               viewModel.provideCloseMarkers(currentUser!!)
           }
           R.id.menu_clean ->{
-              map.clear()
-              drawnTrackedRoutes.clear()
-              personalMarkersOnMap.clear()
-              heatmapOverlay.clear()
-              closeMarkersOnMap.clear()
+             menuClean(item)
           }
       }
         return true
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -429,6 +362,99 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             }
             false
         }
+    }
+
+    private fun menuWalkedRoutes(item:MenuItem){
+        if(drawnTrackedRoutes.isEmpty()){
+            lifecycle.coroutineScope.launch {
+                Log.i("Menu","WalkedRoutes")
+                viewModel.userPolyline.observe(viewLifecycleOwner){
+                    drawWalkedRoute(it)
+                }
+                viewModel.getUserPolyline(currentUser!!)
+                item.title = "Hide Walked Paths"
+            }
+        }
+        else{
+            lifecycle.coroutineScope.launch {
+                drawnTrackedRoutes.forEach {
+                    it.remove()
+                }
+                drawnTrackedRoutes.clear()
+                item.title = getString(R.string.show_tracked_paths)
+            }
+        }
+
+    }
+    private fun menuHeatmap(item:MenuItem){
+        if(heatmapOverlay.isEmpty()){
+            val colors = intArrayOf(
+                Color.rgb(102, 225, 0),  // green
+                Color.rgb(255, 0, 0) // red
+            )
+            val gradient = Gradient(colors,floatArrayOf(0.2f, 1f))
+            viewModel.getHeatmapLatLng(currentUser!!)
+            viewModel.heatmapList.observe(viewLifecycleOwner){
+                val provider = HeatmapTileProvider.Builder()
+                    .data(it)
+                    .gradient(gradient)
+                    .build()
+
+                val overlay =  map.addTileOverlay(
+                    TileOverlayOptions()
+                        .tileProvider(provider)
+                )
+                heatmapOverlay.add(overlay!!)
+                showBiggerPicture(it)
+                item.title = "Hide Heatmap"
+            }
+        }
+        else{
+            heatmapOverlay.forEach {
+                it.remove()
+            }
+            heatmapOverlay.clear()
+            item.title = getString(R.string.show_heatmap)
+        }
+    }
+    private fun menuPersonalMarkers(item:MenuItem){
+        Log.i("Menu","PersonalMarkers")
+        if(personalMarkersOnMap.isEmpty()){
+            lifecycle.coroutineScope.launch {
+                item.title = "Hide Personal Markers"
+                viewModel.userMarkers.observe(viewLifecycleOwner){
+                    val marker = map.addMarker(it.first)
+                    marker!!.tag = it.second
+                    personalMarkersOnMap.add(marker)
+                }
+                viewModel.providePersonalMarkers(currentUser!!)
+            }
+        }
+        else{
+            personalMarkersOnMap.forEach {
+                it.remove()
+            }
+            personalMarkersOnMap.clear()
+            item.title = getString(R.string.show_personal_markers)
+
+        }
+    }
+    private fun menuClean(item:MenuItem){
+        map.clear()
+        if(drawnTrackedRoutes.isNotEmpty()){
+            drawnTrackedRoutes.clear()
+            optionsMenu?.findItem(R.id.menu_walked_routes)?.title = getString(R.string.show_tracked_paths)
+        }
+        if(personalMarkersOnMap.isNotEmpty()){
+            personalMarkersOnMap.clear()
+            optionsMenu?.findItem(R.id.menu_personal_markers)?.title = getString(R.string.show_personal_markers)
+        }
+        if(heatmapOverlay.isNotEmpty()){
+            heatmapOverlay.clear()
+            optionsMenu?.findItem(R.id.menu_heatmap)?.title =getString(R.string.show_heatmap)
+        }
+        closeMarkersOnMap.clear()
+
     }
 
     private fun disableButton(button:Button){

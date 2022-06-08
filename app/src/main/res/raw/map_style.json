@@ -87,6 +87,15 @@
     ]
   },
   {
+    "featureType": "poi",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
     "featureType": "poi.park",
     "elementType": "labels.text.fill",
     "stylers": [
@@ -95,6 +104,7 @@
       }
     ]
   },
+
   {
     "featureType": "road",
     "elementType": "geometry",

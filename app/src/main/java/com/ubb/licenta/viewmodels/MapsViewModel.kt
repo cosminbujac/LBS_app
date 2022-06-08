@@ -76,9 +76,8 @@ class MapsViewModel : ViewModel() {
                 val lastLocation = myLocation.value?.let { LatLng(it.latitude, myLocation.value!!.longitude) }
                 if(MapUtil.calculateTheDistanceLocationUpdate(lastLocation,currentLocation)>=100.0){
                     myLocation.postValue(result.lastLocation)
-                    Log.i("LocationCox",myLocation.value.toString())
+                    Log.i("UpdatedLocation",myLocation.value.toString())
                 }
-
             }
         }
         val locationRequest  = LocationRequest().apply {
