@@ -394,6 +394,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
             )
             val gradient = Gradient(colors,floatArrayOf(0.2f, 1f))
             viewModel.getHeatmapLatLng(currentUser!!)
+            lifecycle.coroutineScope.launch {
             viewModel.heatmapList.observe(viewLifecycleOwner){
                 val provider = HeatmapTileProvider.Builder()
                     .data(it)
@@ -407,6 +408,7 @@ class MapsFragment : Fragment(),OnMapReadyCallback {
                 heatmapOverlay.add(overlay!!)
                 showBiggerPicture(it)
                 item.title = "Hide Heatmap"
+                }
             }
         }
         else{
