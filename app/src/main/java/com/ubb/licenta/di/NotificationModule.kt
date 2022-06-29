@@ -45,6 +45,7 @@ object NotificationModule {
         return NotificationCompat.Builder(context,NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
             .setOngoing(true)
+            .setContentText("Tracking going on")
             .setSmallIcon(R.drawable.ic_run)
             .setContentIntent(pendingIntent)
     }
