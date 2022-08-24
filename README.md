@@ -16,14 +16,19 @@ The main features of the app are the following:
     
  ## Pictures from the app
 
-The main view. There are two types of markers, green for the personal ones and blue for the markers saved by other users
-![markersExmaples](https://user-images.githubusercontent.com/75424534/186367814-0b867889-9728-43be-8e60-43242625bde6.png)
+  - The main view. There are two types of markers, green for the personal ones and blue for the markers saved by other users. Next to it it the card for a selected marker.
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/75424534/186367814-0b867889-9728-43be-8e60-43242625bde6.png" width="30%" height="30%">
+  <img src="https://user-images.githubusercontent.com/75424534/186371989-f95a1d38-531f-4387-bee6-c2eb2ded811c.png" width="30%" height="30%">
+</p>
+  - The view presenting the data and the tracked route after tracking ends:
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/75424534/186368474-ffc18f0f-6050-43d0-81c7-2979dd96608d.png" width="30%" height="30%">
+  <img src="https://user-images.githubusercontent.com/75424534/186372557-00532ba9-a06c-4612-bfc6-e4007de8f450.png" width="30%" height="30%">
+</p>
+  - The Heatmap and all the tracked routes:
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/75424534/186368653-533deb7d-0cb4-4c16-827c-b001a6408fe5.png" width="30%" height="30%">
+  <img src="https://user-images.githubusercontent.com/75424534/186368913-81c44db7-8008-400c-8ed1-58200cc4df94.png" width="30%" height="30%">
+</p>
 
-The view presenting the data after tracking ends:
-![tracking_final_card](https://user-images.githubusercontent.com/75424534/186368474-ffc18f0f-6050-43d0-81c7-2979dd96608d.png)
-
-The Heatmap and all the tracked routes:
-![heatmap](https://user-images.githubusercontent.com/75424534/186368653-533deb7d-0cb4-4c16-827c-b001a6408fe5.png)
-![all_polys](https://user-images.githubusercontent.com/75424534/186368913-81c44db7-8008-400c-8ed1-58200cc4df94.png)
-
- 
