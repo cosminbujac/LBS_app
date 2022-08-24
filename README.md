@@ -1,5 +1,5 @@
 # Location Based Services App
-The developed android application is designed to make it easier to explore a new city or discover special places for residents who already know the areas. The focus is on the data provided by users and on using it anonymously to highlight, based on personal experiences, the favorite places in the area.
+This android application is designed to make it easier to explore a new city or discover special places for residents who already know the areas. The focus is on the data provided by users and on using it anonymously to highlight, based on personal experiences, the favorite places in the area.
 This project uses location based services and during the design and implementation stages of the app, the guidelines for Android application design and development and best practices were followed.
 
 ## Features and details:
